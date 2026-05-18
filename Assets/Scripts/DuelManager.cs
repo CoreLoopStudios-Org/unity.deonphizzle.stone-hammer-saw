@@ -89,7 +89,7 @@ public class DuelManager : MonoBehaviourPunCallbacks
     private void ResolveResults()
     {
         // Simple 2-player resolution for now
-        Player[] players = PhotonNetwork.PlayerList;
+        Photon.Realtime.Player[] players = PhotonNetwork.PlayerList;
         if (players.Length < 2) return;
 
         int p1Id = players[0].ActorNumber;
