@@ -1,5 +1,6 @@
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
 using System.Collections.Generic;
 
 public class DuelManager : MonoBehaviourPunCallbacks
@@ -153,10 +154,6 @@ public class DuelManager : MonoBehaviourPunCallbacks
         {
             Debug.Log("Result: YOU LOSE!");
             // UI: Show Loss Panel
-        }
-    }
-}
-anel
         }
     }
 }

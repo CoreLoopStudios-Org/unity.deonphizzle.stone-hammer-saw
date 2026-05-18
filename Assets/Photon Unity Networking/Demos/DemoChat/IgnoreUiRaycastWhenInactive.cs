@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
 
 
-public class IgnoreUiRaycastWhenInactive : MonoBehaviour, ICanvasRaycastFilter
+namespace Photon.Chat.DemoChat.Utilities
 {
-    public bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)
+    // small script to avoid clicks picking inactive UI elements
+    public class IgnoreUiRaycastWhenInactive : MonoBehaviour, ICanvasRaycastFilter
     {
-        return gameObject.activeInHierarchy;
+        public bool IsRaycastLocationValid(Vector2 screenPoint, Camera eventCamera)
+        {
+            return gameObject.activeInHierarchy;
+        }
     }
 }

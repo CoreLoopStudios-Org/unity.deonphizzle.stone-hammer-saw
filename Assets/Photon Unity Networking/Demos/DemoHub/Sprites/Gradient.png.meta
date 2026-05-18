@@ -75,7 +75,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 083666ebc5cf2e448893f2f8893cf96f
+    spriteID: 9f2a0d94850205c449718d6a65b6da2c
     vertices: []
     indices: 
     edges: []
@@ -88,8 +88,8 @@ TextureImporter:
   assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
-  productId: 1786
-  packageName: Photon Unity Networking Classic - FREE
-  packageVersion: 1.105
+  productId: 119922
+  packageName: PUN 2 - FREE
+  packageVersion: 2.52
   assetPath: Assets/Photon Unity Networking/Demos/DemoHub/Sprites/Gradient.png
-  uploadId: 460225
+  uploadId: 817708

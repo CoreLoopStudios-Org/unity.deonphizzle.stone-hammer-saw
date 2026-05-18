@@ -1090,7 +1090,7 @@ GameObject:
   - component: {fileID: 533423799}
   - component: {fileID: 533423798}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: P1-TEXT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1390,7 +1390,7 @@ GameObject:
   - component: {fileID: 684518907}
   - component: {fileID: 684518906}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: Round Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1677,7 +1677,7 @@ GameObject:
   - component: {fileID: 789806882}
   - component: {fileID: 789806881}
   m_Layer: 5
-  m_Name: Image (1)
+  m_Name: Player2-CHARACTER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2912,7 +2912,7 @@ GameObject:
   - component: {fileID: 1716828092}
   - component: {fileID: 1716828091}
   m_Layer: 5
-  m_Name: Text (TMP) (1)
+  m_Name: p2-TEXT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3049,7 +3049,7 @@ GameObject:
   - component: {fileID: 1824123966}
   - component: {fileID: 1824123965}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Player1-CHARACTER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
