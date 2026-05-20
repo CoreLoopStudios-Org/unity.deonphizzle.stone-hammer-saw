@@ -75,7 +75,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 698d037ff36c21c4ebc7fef46c5295d3
+    spriteID: 10108fb3311b5d345a644c65ddc43a0d
     vertices: []
     indices: 
     edges: []
@@ -88,8 +88,8 @@ TextureImporter:
   assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
-  productId: 1786
-  packageName: Photon Unity Networking Classic - FREE
-  packageVersion: 1.105
+  productId: 119922
+  packageName: PUN 2 - FREE
+  packageVersion: 2.52
   assetPath: Assets/Photon Unity Networking/Demos/DemoHub/Sprites/PunIcon-White-129.png
-  uploadId: 460225
+  uploadId: 817708

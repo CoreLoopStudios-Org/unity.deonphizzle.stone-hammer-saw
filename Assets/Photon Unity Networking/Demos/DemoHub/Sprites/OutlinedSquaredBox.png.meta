@@ -31,8 +31,8 @@ TextureImporter:
   maxTextureSize: 1024
   textureSettings:
     serializedVersion: 2
-    filterMode: -1
-    aniso: 1
+    filterMode: 0
+    aniso: 16
     mipBias: -100
     wrapU: 1
     wrapV: 1
@@ -46,7 +46,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 2, y: 2, z: 2, w: 2}
+  spriteBorder: {x: 1, y: 1, z: 1, w: 1}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -75,7 +75,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: fd0459a6556df294c9ee909a34c01559
+    spriteID: 0ca28098c6f2a0a4ba4f7e88ae619ca9
     vertices: []
     indices: 
     edges: []
@@ -88,8 +88,8 @@ TextureImporter:
   assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
-  productId: 1786
-  packageName: Photon Unity Networking Classic - FREE
-  packageVersion: 1.105
+  productId: 119922
+  packageName: PUN 2 - FREE
+  packageVersion: 2.52
   assetPath: Assets/Photon Unity Networking/Demos/DemoHub/Sprites/OutlinedSquaredBox.png
-  uploadId: 460225
+  uploadId: 817708
