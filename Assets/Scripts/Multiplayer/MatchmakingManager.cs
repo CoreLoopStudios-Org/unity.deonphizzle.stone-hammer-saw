@@ -7,7 +7,16 @@ public class MatchmakingManager : MonoBehaviourPunCallbacks
     private void Start()
     {
         PhotonNetwork.AutomaticallySyncScene = true;
-        if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
+    }
+
+    // Game-Selection-Panel এর Play বাটনে এটি লিঙ্ক করবেন
+    public void StartMatchmaking()
+    {
+        Debug.Log("Connecting to Server...");
+        if (!PhotonNetwork.IsConnected) 
+            PhotonNetwork.ConnectUsingSettings();
+        else 
+            PhotonNetwork.JoinRandomRoom();
     }
 
     public override void OnConnectedToMaster() => PhotonNetwork.JoinRandomRoom();
@@ -23,8 +32,8 @@ public class MatchmakingManager : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount == 2)
         {
-            // RPC এর মাধ্যমে গেমে সবাইকে গেম রাউন্ড শুরু করার সিগন্যাল দিচ্ছে
-            GetComponent<GameplayController>().photonView.RPC("StartGameRoundRPC", RpcTarget.All);
+            // ২ জন জয়েন হলে গেম লোডিং শুরু করার জন্য RPC কল
+            GetComponent<GameplayController>().photonView.RPC("TriggerGameLoadingRPC", RpcTarget.All);
         }
     }
 }

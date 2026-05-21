@@ -5,17 +5,87 @@ using DG.Tweening;
 
 public class UIManager : MonoBehaviour
 {
-    [Header("UI Panels")]
-    public GameObject loadingPanel, weaponSelectPanel, characterPanel, winPanel, lossPanel;
-    
-    [Header("Progress & UI")]
+    [Header("App Flow Panels")]
+    public GameObject appLoadingPanel;         // 1. Loading-Panel
+    public GameObject characterSelectionPanel; // 2. CharacterSelectionPanel
+    public GameObject gameSelectionPanel;      // 3. Game-Selection-Panel
+    public GameObject gameLoadingPanel;        // 4. Stone-saw-hammer-Panel
+
+    [Header("Game Panels")]
+    public GameObject weaponSelectPanel;
+    public GameObject characterPanel;
+    public GameObject winPanel;
+    public GameObject lossPanel;
+
+    [Header("UI Elements")]
+    public Image appLoadingBar;       // Loading-Panel এর Filled-progress
+    public TextMeshProUGUI appLoadingText; 
+    public TMP_InputField playerNameInput; 
+    public Image gameLoadingBar;      // Stone-saw-hammer-Panel এর Filled-progress
+
+    [Header("Gameplay UI")]
     public TextMeshProUGUI timerText;
-    public TextMeshProUGUI roundText; 
-    public Image progressBar; 
-    public Image[] roundCheckmarks; 
+    public TextMeshProUGUI roundText;
+    public Image progressBar;
+    public Image[] roundCheckmarks;
 
-    private void Start() => ShowPanel(loadingPanel);
+    private int selectedCharacterIndex = -1;
 
+    private void Start()
+    {
+        // গেম ওপেন হলে প্রথম লোডিং শুরু হবে
+        ShowPanel(appLoadingPanel);
+        StartAppLoading();
+    }
+
+    private void StartAppLoading()
+    {
+        appLoadingBar.fillAmount = 0f;
+        
+        // টেক্সট ব্লিঙ্ক (Blink) করার অ্যানিমেশন
+        if(appLoadingText != null)
+            appLoadingText.DOFade(0f, 0.5f).SetLoops(-1, LoopType.Yoyo);
+
+        // ৩ সেকেন্ডের লোডিং
+        appLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
+        {
+            if(appLoadingText != null) appLoadingText.DOKill();
+            ShowPanel(characterSelectionPanel); // লোডিং শেষে ক্যারেক্টার সিলেকশন
+        });
+    }
+
+    // ক্যারেক্টার সিলেক্ট করার জন্য (০ থেকে ৫ পর্যন্ত ইনডেক্স দেবেন বাটনে)
+    public void SelectCharacter(int index)
+    {
+        selectedCharacterIndex = index;
+    }
+
+    // CharacterSelectionPanel এর 'Next' বাটনের জন্য
+    public void GoToGameSelection()
+    {
+        // নাম বা ক্যারেক্টার সিলেক্ট না করলে যেতে দেবে না (অপশনাল লজিক)
+        if (string.IsNullOrEmpty(playerNameInput.text) || selectedCharacterIndex == -1)
+        {
+            Debug.LogWarning("Select Character and Enter Name!");
+            return;
+        }
+
+        Photon.Pun.PhotonNetwork.NickName = playerNameInput.text; // ফোটনে নাম সেভ
+        ShowPanel(gameSelectionPanel);
+    }
+
+    // ম্যাচমেকিং হওয়ার পর গেমের স্পেসিফিক লোডিং (মাস্টার ক্লায়েন্ট কল করবে)
+    public void StartGameSpecificLoading(System.Action onComplete)
+    {
+        ShowPanel(gameLoadingPanel);
+        gameLoadingBar.fillAmount = 0f;
+        gameLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
+        {
+            onComplete?.Invoke(); // ৩ সেকেন্ড পর গেমপ্লে শুরু হবে
+        });
+    }
+
+    // --- আগের গেমপ্লে UI ফাংশনগুলো ---
     public void ShowWeaponSelect()
     {
         ShowPanel(weaponSelectPanel);
@@ -33,7 +103,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // নতুন ফিচার: রাউন্ড এবং প্রগ্রেস বার আপডেট
     public void UpdateRoundUI(int round, int p1Score, int p2Score)
     {
         roundText.text = "Round: " + round + "/3";
@@ -52,11 +121,15 @@ public class UIManager : MonoBehaviour
 
     private void ShowPanel(GameObject panelToShow)
     {
-        loadingPanel.SetActive(false);
+        appLoadingPanel.SetActive(false);
+        characterSelectionPanel.SetActive(false);
+        gameSelectionPanel.SetActive(false);
+        gameLoadingPanel.SetActive(false);
         weaponSelectPanel.SetActive(false);
         characterPanel.SetActive(false);
         winPanel.SetActive(false);
         lossPanel.SetActive(false);
+
         if (panelToShow != null) panelToShow.SetActive(true);
     }
 }

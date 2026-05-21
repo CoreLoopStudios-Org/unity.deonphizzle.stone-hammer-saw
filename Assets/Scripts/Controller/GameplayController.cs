@@ -10,8 +10,18 @@ public class GameplayController : MonoBehaviourPunCallbacks
 
     private void Awake() => uiManager = FindAnyObjectByType<UIManager>();
 
+    // ম্যাচমেকিং শেষ হলে মাস্টার ক্লায়েন্ট এটি সবাইকে কল করবে
     [PunRPC]
-    public void StartGameRoundRPC()
+    public void TriggerGameLoadingRPC()
+    {
+        // ২য় লোডিং প্যানেল দেখাবে এবং ৩ সেকেন্ড পর গেম শুরু করবে
+        uiManager.StartGameSpecificLoading(() => 
+        {
+            StartGameRound();
+        });
+    }
+
+    private void StartGameRound()
     {
         myWeaponIndex = -1;
         opponentWeaponIndex = -1;
@@ -19,6 +29,7 @@ public class GameplayController : MonoBehaviourPunCallbacks
         uiManager.UpdateRoundUI(round, p1Score, p2Score);
     }
 
+    // অস্ত্র সিলেক্ট করা
     public void SelectWeapon(int weaponIndex)
     {
         if (myWeaponIndex != -1) return;
@@ -49,8 +60,7 @@ public class GameplayController : MonoBehaviourPunCallbacks
 
     private bool DetermineWinner(int mine, int opp)
     {
-        // লজিক: 0=MiniSaw, 1=Hammer, 2=BigSaw, 3=MiniStone, 4=BigStone
-        if (mine == opp) return false; // ড্র হলে লজিক অনুযায়ী হ্যান্ডেল করুন
+        if (mine == opp) return false; 
         if ((mine == 2 && (opp == 0 || opp == 3 || opp == 1)) || 
             (mine == 4 && (opp == 3 || opp == 0)) ||
             (mine == 1 && opp == 0) || (mine == 0 && opp == 3)) return true;
@@ -59,13 +69,13 @@ public class GameplayController : MonoBehaviourPunCallbacks
 
     private void TriggerWin()
     {
-        if (round < 3) { round++; Invoke("StartGameRoundRPC", 2f); }
+        if (round < 3) { round++; Invoke("StartGameRound", 2f); }
         else uiManager.ShowWinScreen();
     }
 
     private void TriggerLoss()
     {
-        if (round < 3) { round++; Invoke("StartGameRoundRPC", 2f); }
+        if (round < 3) { round++; Invoke("StartGameRound", 2f); }
         else uiManager.ShowLossScreen();
     }
 }
