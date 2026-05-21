@@ -12,21 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f3758f8f58fdef43803eb9be1df0608, type: 3}
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: Assembly-CSharp::ServerSettings
-  AppID: 9ffc875e-ff41-4c87-8c5b-198d2a4ec836
-  VoiceAppID: 
-  ChatAppID: 
-  HostType: 1
-  PreferredRegion: 0
-  EnabledRegions: -1
-  Protocol: 0
-  ServerAddress: 
-  ServerPort: 5055
-  VoiceServerPort: 5055
-  JoinLobby: 0
-  EnableLobbyStatistics: 0
+  AppSettings:
+    AppIdRealtime: 9ffc875e-ff41-4c87-8c5b-198d2a4ec836
+    AppIdFusion: 
+    AppIdChat: 
+    AppIdVoice: 
+    AppVersion: 
+    UseNameServer: 1
+    FixedRegion: 
+    Server: 
+    Port: 0
+    ProxyServer: 
+    Protocol: 0
+    EnableProtocolFallback: 1
+    AuthMode: 0
+    EnableLobbyStatistics: 0
+    NetworkLogging: 1
+  DevRegion: asia
   PunLogging: 0
-  NetworkLogging: 1
+  EnableSupportLogger: 0
   RunInBackground: 1
+  StartInOfflineMode: 0
   RpcList:
   - Chat
   - ColorRpc
@@ -43,4 +49,10 @@ MonoBehaviour:
   - RequestForPickupItems
   - RequestForPickupTimes
   - TaggedPlayer
+  - ClickRpc
+  - DestroySpaceship
+  - Fire
+  - RespawnSpaceship
   DisableAutoOpenWizard: 1
+  ShowSettings: 0
+  DevRegionSetOnce: 1
