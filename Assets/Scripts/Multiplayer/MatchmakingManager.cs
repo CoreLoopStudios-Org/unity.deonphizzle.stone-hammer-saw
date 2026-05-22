@@ -13,7 +13,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         Debug.Log("Connecting to Fusion Server...");
 
-        // NetworkRunner না থাকলে অবজেক্টে অ্যাড করে নেওয়া
+        // NetworkRunner না থাকলে অবজেক্টে অ্যাড করে নেওয়া
         if (_runner == null)
         {
             _runner = gameObject.AddComponent<NetworkRunner>();
@@ -25,7 +25,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         var result = await _runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
-            SessionName = "StoneHammerSawRoom", // সবাই একই রুমে জয়েন করবে
+            SessionName = "StoneHammerSawRoom", // সবাই একই রুমে জয়েন করবে
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
@@ -39,7 +39,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // ২ জন প্লেয়ার জয়েন করলে এই মেথড কল হবে
+    // ২ জন প্লেয়ার জয়েন করলে এই মেথড কল হবে
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         Debug.Log($"Player Joined! Player ID: {player.PlayerId}");
@@ -49,13 +49,16 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (playerCount == 2)
         {
-            Debug.Log("Room is full! Ready to start the game...");
-            // PUN 2 এর RPC এখানে কাজ করবে না, আমরা পরবর্তী ধাপে GameplayController আপডেট করব
-            // FindAnyObjectByType<GameplayController>().TriggerGameLoadingRPC();
+            // Shared Mode এ যে প্রথম রুম বানিয়েছে (Master Client), সে গেম শুরু করার সিগন্যাল দেবে
+            if (runner.IsSharedModeMasterClient)
+            {
+                Debug.Log("Room is full! Starting the game...");
+                FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
+            }
         }
     }
 
-    // --- Fusion-এর জন্য অন্যান্য প্রয়োজনীয় (কিন্তু ফাঁকা) কলব্যাক মেথডগুলো ---
+    // --- Fusion-এর জন্য অন্যান্য প্রয়োজনীয় (কিন্তু ফাঁকা) কলব্যাক মেথডগুলো ---
     // (এগুলো মুছে ফেললে কোডে এরর আসবে, তাই এগুলো নিচে রেখে দিন)
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }

@@ -58,23 +58,31 @@ public class UIManager : MonoBehaviour
     public void SelectCharacter(int index)
     {
         selectedCharacterIndex = index;
+        Debug.Log("Character Selected: " + index); // কনসোলে দেখার জন্য লগ
     }
 
     // CharacterSelectionPanel এর 'Next' বাটনের জন্য
     public void GoToGameSelection()
     {
-        // নাম বা ক্যারেক্টার সিলেক্ট না করলে যেতে দেবে না (অপশনাল লজিক)
-        if (string.IsNullOrEmpty(playerNameInput.text) || selectedCharacterIndex == -1)
+        // নাম ইনপুট ফিল্ড ঠিকমতো কাজ করছে কি না চেক করা
+        if (playerNameInput == null || string.IsNullOrEmpty(playerNameInput.text))
         {
-            Debug.LogWarning("Select Character and Enter Name!");
+            Debug.LogWarning("Please enter your name!");
             return;
         }
 
-        // Photon.Pun.PhotonNetwork.NickName = playerNameInput.text; // ফোটনে নাম সেভ
-        // ShowPanel(gameSelectionPanel);
+        // ক্যারেক্টার সিলেক্ট করা হয়েছে কি না চেক করা
+        if (selectedCharacterIndex == -1)
+        {
+            Debug.LogWarning("Please select a character!");
+            return;
+        }
+
+        // সব ঠিক থাকলে Game-Selection-Panel এ নিয়ে যাবে
+        ShowPanel(gameSelectionPanel);
     }
 
-    // ম্যাচমেকিং হওয়ার পর গেমের স্পেসিফিক লোডিং (মাস্টার ক্লায়েন্ট কল করবে)
+    // ম্যাচমেকিং হওয়ার পর গেমের স্পেসিফিক লোডিং (মাস্টার ক্লায়েন্ট কল করবে)
     public void StartGameSpecificLoading(System.Action onComplete)
     {
         ShowPanel(gameLoadingPanel);
