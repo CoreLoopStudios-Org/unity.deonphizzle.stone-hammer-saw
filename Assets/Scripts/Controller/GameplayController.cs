@@ -1,23 +1,34 @@
 using UnityEngine;
 using Fusion;
 
-// Fusion এ মাল্টিপ্লেয়ার স্ক্রিপ্ট NetworkBehaviour থেকে আসে
 public class GameplayController : NetworkBehaviour
 {
     private UIManager uiManager;
+
+    // Fusion এ ভেরিয়েবলগুলো সিঙ্ক করার জন্য [Networked] ব্যবহার করা হয়
+    [Networked] private int round { get; set; }
+    [Networked] private int p1Score { get; set; }
+    [Networked] private int p2Score { get; set; }
+
     private int myWeaponIndex = -1;
     private int opponentWeaponIndex = -1;
-    private int round = 1;
-    private int p1Score = 0, p2Score = 0;
 
     private void Awake() => uiManager = FindAnyObjectByType<UIManager>();
 
-    // PUN 2 এর [PunRPC] এর বদলে Fusion এর [Rpc]
-    // RpcSources.All মানে যে কেউ কল করতে পারবে, RpcTargets.All মানে সবার কাছে যাবে
+    public override void Spawned()
+    {
+        // গেম শুরুর সময় স্কোর রিসেট
+        if (Object.HasStateAuthority)
+        {
+            round = 1;
+            p1Score = 0;
+            p2Score = 0;
+        }
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_TriggerGameLoading()
     {
-        // ২য় লোডিং প্যানেল দেখাবে এবং ৩ সেকেন্ড পর গেম শুরু করবে
         uiManager.StartGameSpecificLoading(() => 
         {
             StartGameRound();
@@ -32,13 +43,11 @@ public class GameplayController : NetworkBehaviour
         uiManager.UpdateRoundUI(round, p1Score, p2Score);
     }
 
-    // অস্ত্র সিলেক্ট করা (UI বাটন থেকে কল হবে)
     public void SelectWeapon(int weaponIndex)
     {
         if (myWeaponIndex != -1) return;
         myWeaponIndex = weaponIndex;
         
-        // অন্য প্লেয়ারকে জানিয়ে দেওয়া (RpcTargets.Proxies মানে আমি ছাড়া বাকি সবাই)
         RPC_ReceiveOpponentWeapon(weaponIndex);
         CheckRoundResult();
     }
@@ -52,10 +61,16 @@ public class GameplayController : NetworkBehaviour
 
     private void CheckRoundResult()
     {
+        // দুইজনের অস্ত্র সিলেক্ট না হলে রেজাল্ট ক্যালকুলেট হবে না
         if (myWeaponIndex == -1 || opponentWeaponIndex == -1) return;
 
         bool iWon = DetermineWinner(myWeaponIndex, opponentWeaponIndex);
-        if (iWon) p1Score++; else p2Score++;
+        
+        // শুধুমাত্র মাস্টার ক্লায়েন্ট স্কোর আপডেট করবে
+        if (Object.HasStateAuthority)
+        {
+            if (iWon) p1Score++; else p2Score++;
+        }
 
         uiManager.SetRoundComplete(round - 1);
         uiManager.ShowCharacterBattle();

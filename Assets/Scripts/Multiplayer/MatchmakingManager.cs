@@ -2,64 +2,52 @@ using UnityEngine;
 using Fusion;
 using Fusion.Sockets;
 using System.Collections.Generic;
-using System;
 
 public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    private NetworkRunner _runner;
+    // Inspector-এ নতুন তৈরি করা "FusionRunner" গেম অবজেক্টটি এখানে ড্র্যাগ করে দিন
+    public NetworkRunner runner;
 
-    // Game-Selection-Panel এর PLAY বাটনে এটি লিঙ্ক করবেন
     public async void StartMatchmaking()
     {
         Debug.Log("Connecting to Fusion Server...");
 
-        // NetworkRunner না থাকলে অবজেক্টে অ্যাড করে নেওয়া
-        if (_runner == null)
+        if (runner == null)
         {
-            _runner = gameObject.AddComponent<NetworkRunner>();
-            _runner.ProvideInput = true;
-            _runner.AddCallbacks(this); // কলব্যাকগুলো রেজিস্টার করা
+            Debug.LogError("NetworkRunner is not assigned in the Inspector! Please drag the FusionRunner object here.");
+            return;
         }
 
-        // Shared Mode-এ গেম শুরু করা (PUN 2-এর মতোই সার্ভার কাজ করবে)
-        var result = await _runner.StartGame(new StartGameArgs()
+        // কলব্যাকগুলো রেজিস্টার করা
+        runner.AddCallbacks(this);
+
+        // Shared Mode-এ গেম শুরু করা
+        var result = await runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
-            SessionName = "StoneHammerSawRoom", // সবাই একই রুমে জয়েন করবে
-            SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+            SessionName = "StoneHammerSawRoom",
+            SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
         if (result.Ok)
-        {
             Debug.Log("Successfully joined the Fusion room!");
-        }
         else
-        {
             Debug.LogError($"Failed to join: {result.ShutdownReason}");
-        }
     }
 
-    // ২ জন প্লেয়ার জয়েন করলে এই মেথড কল হবে
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log($"Player Joined! Player ID: {player.PlayerId}");
+        Debug.Log($"Player Joined! ID: {player.PlayerId}");
         
-        int playerCount = 0;
-        foreach (var p in runner.ActivePlayers) playerCount++;
-
-        if (playerCount == 2)
+        // প্লেয়ার সংখ্যা ২ হলে গেম শুরু করার সিগন্যাল দেওয়া
+        if (runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
         {
-            // Shared Mode এ যে প্রথম রুম বানিয়েছে (Master Client), সে গেম শুরু করার সিগন্যাল দেবে
-            if (runner.IsSharedModeMasterClient)
-            {
-                Debug.Log("Room is full! Starting the game...");
-                FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
-            }
+            Debug.Log("Room is full! Starting the game...");
+            FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
         }
     }
 
-    // --- Fusion-এর জন্য অন্যান্য প্রয়োজনীয় (কিন্তু ফাঁকা) কলব্যাক মেথডগুলো ---
-    // (এগুলো মুছে ফেললে কোডে এরর আসবে, তাই এগুলো নিচে রেখে দিন)
+    // Fusion এর সব প্রয়োজনীয় কলব্যাক (কিছুই পরিবর্তন করবেন না)
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

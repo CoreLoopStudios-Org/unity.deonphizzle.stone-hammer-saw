@@ -1097,7 +1097,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &489192979
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2219,7 +2219,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 261}
+  m_AnchoredPosition: {x: 0, y: 257}
   m_SizeDelta: {x: 770, y: 266}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &680197808
@@ -3432,10 +3432,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 617445639}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.874115, y: 0}
-  m_SizeDelta: {x: -9.7483, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.0000038146973, y: 0}
+  m_SizeDelta: {x: 908.2517, y: 118}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &921751571
 MonoBehaviour:
@@ -3761,7 +3761,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &942327701
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4626,6 +4626,7 @@ GameObject:
   - component: {fileID: 1518890477}
   - component: {fileID: 1518890478}
   - component: {fileID: 1518890479}
+  - component: {fileID: 1518890480}
   m_Layer: 0
   m_Name: MatchmakingManager
   m_TagString: Untagged
@@ -4672,6 +4673,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22b621d6cdb2e2146bf33e5d05968ea7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayController
+--- !u!114 &1518890480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1518890476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1199893898, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkRunner
 --- !u!1 &1607754425
 GameObject:
   m_ObjectHideFlags: 0
@@ -5624,7 +5637,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -797.6}
+  m_AnchoredPosition: {x: 2.4, y: -798}
   m_SizeDelta: {x: 770, y: 266}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2047051921
