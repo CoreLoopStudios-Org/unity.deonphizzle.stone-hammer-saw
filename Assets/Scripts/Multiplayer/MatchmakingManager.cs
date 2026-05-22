@@ -16,8 +16,14 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner == null)
         {
-            Debug.LogError("NetworkRunner is not assigned in the Inspector! Please drag the FusionRunner object here.");
-            return;
+            runner = FindAnyObjectByType<NetworkRunner>();
+        }
+
+        if (runner == null)
+        {
+            Debug.Log("No NetworkRunner found in scene. Creating a new 'FusionRunner' dynamically...");
+            GameObject runnerGo = new GameObject("FusionRunner");
+            runner = runnerGo.AddComponent<NetworkRunner>();
         }
 
         // কলব্যাকগুলো রেজিস্টার করা
