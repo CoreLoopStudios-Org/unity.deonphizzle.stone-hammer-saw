@@ -70,8 +70,8 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        Photon.Pun.PhotonNetwork.NickName = playerNameInput.text; // ফোটনে নাম সেভ
-        ShowPanel(gameSelectionPanel);
+        // Photon.Pun.PhotonNetwork.NickName = playerNameInput.text; // ফোটনে নাম সেভ
+        // ShowPanel(gameSelectionPanel);
     }
 
     // ম্যাচমেকিং হওয়ার পর গেমের স্পেসিফিক লোডিং (মাস্টার ক্লায়েন্ট কল করবে)
