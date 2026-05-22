@@ -46,10 +46,13 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
     // MatchmakingManager.cs এর OnPlayerJoined এ পরিবর্তন করুন:
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        // GameplayController স্পন হওয়া পর্যন্ত অপেক্ষা করুন
-        if (GameplayController.Instance != null && runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
+        Debug.Log($"Player Joined! Total Players: {runner.ActivePlayers.Count()}");
+    
+        // রুম ফুল হলে গেম লোড করার RPC কল করা
+        if (runner.ActivePlayers.Count() == 2)
         {
-            GameplayController.Instance.RPC_TriggerGameLoading();
+            // মাস্টার ক্লায়েন্ট কল করবে, কিন্তু আমরা নিশ্চিত করছি এটি গেমপ্লের সব ক্লায়েন্টের কাছে যায়
+            FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
         }
     }
 
