@@ -3,9 +3,9 @@ using Fusion;
 
 public class GameplayController : NetworkBehaviour
 {
+    public static GameplayController Instance; // Singleton reference
     private UIManager uiManager;
 
-    // Fusion এ ভেরিয়েবলগুলো সিঙ্ক করার জন্য [Networked] ব্যবহার করা হয়
     [Networked] private int round { get; set; }
     [Networked] private int p1Score { get; set; }
     [Networked] private int p2Score { get; set; }
@@ -13,11 +13,12 @@ public class GameplayController : NetworkBehaviour
     private int myWeaponIndex = -1;
     private int opponentWeaponIndex = -1;
 
-    private void Awake() => uiManager = FindAnyObjectByType<UIManager>();
-
+    // একমাত্র Spawned মেথডটি এখানে থাকবে
     public override void Spawned()
     {
-        // গেম শুরুর সময় স্কোর রিসেট
+        Instance = this; // নিজেকে রেজিস্টার করা
+        uiManager = FindAnyObjectByType<UIManager>(); // UIManager খুঁজে নেওয়া
+
         if (Object.HasStateAuthority)
         {
             round = 1;
@@ -47,7 +48,6 @@ public class GameplayController : NetworkBehaviour
     {
         if (myWeaponIndex != -1) return;
         myWeaponIndex = weaponIndex;
-        
         RPC_ReceiveOpponentWeapon(weaponIndex);
         CheckRoundResult();
     }
@@ -61,12 +61,9 @@ public class GameplayController : NetworkBehaviour
 
     private void CheckRoundResult()
     {
-        // দুইজনের অস্ত্র সিলেক্ট না হলে রেজাল্ট ক্যালকুলেট হবে না
         if (myWeaponIndex == -1 || opponentWeaponIndex == -1) return;
 
         bool iWon = DetermineWinner(myWeaponIndex, opponentWeaponIndex);
-        
-        // শুধুমাত্র মাস্টার ক্লায়েন্ট স্কোর আপডেট করবে
         if (Object.HasStateAuthority)
         {
             if (iWon) p1Score++; else p2Score++;
@@ -74,7 +71,6 @@ public class GameplayController : NetworkBehaviour
 
         uiManager.SetRoundComplete(round - 1);
         uiManager.ShowCharacterBattle();
-
         Invoke(iWon ? "TriggerWin" : "TriggerLoss", 2f);
     }
 

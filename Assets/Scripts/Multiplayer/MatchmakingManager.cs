@@ -33,7 +33,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         var result = await runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
-            SessionName = "StoneHammerSawRoom",
+            SessionName = null,
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
@@ -43,15 +43,13 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.LogError($"Failed to join: {result.ShutdownReason}");
     }
 
+    // MatchmakingManager.cs এর OnPlayerJoined এ পরিবর্তন করুন:
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log($"Player Joined! ID: {player.PlayerId}");
-        
-        // প্লেয়ার সংখ্যা ২ হলে গেম শুরু করার সিগন্যাল দেওয়া
-        if (runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
+        // GameplayController স্পন হওয়া পর্যন্ত অপেক্ষা করুন
+        if (GameplayController.Instance != null && runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
         {
-            Debug.Log("Room is full! Starting the game...");
-            FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
+            GameplayController.Instance.RPC_TriggerGameLoading();
         }
     }
 
