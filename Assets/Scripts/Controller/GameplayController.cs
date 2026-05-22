@@ -1,5 +1,6 @@
 using UnityEngine;
 using Fusion;
+using System.Linq;
 
 public class GameplayController : NetworkBehaviour
 {
@@ -35,6 +36,13 @@ public class GameplayController : NetworkBehaviour
             round = 1;
             p1Score = 0;
             p2Score = 0;
+
+            // Safety fallback: if 2 players are already in the session, start the game
+            if (Runner.ActivePlayers.Count() == 2)
+            {
+                Debug.Log("Both players are already present on Spawn. Triggering game loading...");
+                RPC_TriggerGameLoading();
+            }
         }
     }
 

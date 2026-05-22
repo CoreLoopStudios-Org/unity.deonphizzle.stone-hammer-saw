@@ -49,10 +49,18 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log($"Player Joined! Total Players: {runner.ActivePlayers.Count()}");
     
         // রুম ফুল হলে গেম লোড করার RPC কল করা
-        if (runner.ActivePlayers.Count() == 2)
+        if (runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
         {
-            // মাস্টার ক্লায়েন্ট কল করবে, কিন্তু আমরা নিশ্চিত করছি এটি গেমপ্লের সব ক্লায়েন্টের কাছে যায়
-            FindAnyObjectByType<GameplayController>().RPC_TriggerGameLoading();
+            var controller = FindAnyObjectByType<GameplayController>();
+            if (controller != null && controller.Object != null && controller.Object.IsValid)
+            {
+                // মাস্টার ক্লায়েন্ট কল করবে, কিন্তু আমরা নিশ্চিত করছি এটি গেমপ্লের সব ক্লায়েন্টের কাছে যায়
+                controller.RPC_TriggerGameLoading();
+            }
+            else
+            {
+                Debug.LogWarning("GameplayController is not yet initialized or spawned on the Master Client!");
+            }
         }
     }
 
