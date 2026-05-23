@@ -1,5 +1,6 @@
 using UnityEngine;
 using Fusion;
+using System.Linq;
 
 public class GameplayController : NetworkBehaviour
 {
@@ -40,6 +41,19 @@ public class GameplayController : NetworkBehaviour
             round = 1;
             masterScore = 0;
             clientScore = 0;
+        }
+
+        // If the room has 2 players when this object spawns (typically happens on the client side after scene load)
+        if (Runner.ActivePlayers.Count() == 2)
+        {
+            Debug.Log("[GameplayController] Room is full on Spawned. Initializing game start flow on this client...");
+            if (uiManager != null)
+            {
+                uiManager.StartGameSpecificLoading(() => 
+                {
+                    StartGameRound();
+                });
+            }
         }
     }
 

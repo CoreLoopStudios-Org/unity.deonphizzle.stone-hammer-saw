@@ -62,7 +62,9 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
             }
             else
             {
-                Debug.LogError("UIManager or GameplayController is missing in the scene!");
+                // If UIManager or GameplayController is null, it means we are likely on the client where scene objects haven't finished spawning.
+                // This is expected and will be handled by GameplayController's Spawned() callback.
+                Debug.Log("[MatchmakingManager] UIManager or GameplayController is not ready in the scene yet. Waiting for Spawned()...");
             }
         }
     }
