@@ -47,19 +47,27 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         Debug.Log($"Player Joined! Total Players: {runner.ActivePlayers.Count()}");
-    
-        // রুম ফুল হলে গেম লোড করার RPC কল করা
-        if (runner.IsSharedModeMasterClient && runner.ActivePlayers.Count() == 2)
+
+        // যখনই ২ জন প্লেয়ার হবে, সরাসরি লোকালি গেম শুরু করে দিন (কোনো RPC ছাড়া)
+        if (runner.ActivePlayers.Count() == 2)
         {
-            var controller = FindAnyObjectByType<GameplayController>();
-            if (controller != null && controller.Object != null && controller.Object.IsValid)
+            Debug.Log("2 Players Connected! Starting Game Locally...");
+            
+            UIManager uiManager = FindAnyObjectByType<UIManager>();
+            GameplayController gameController = FindAnyObjectByType<GameplayController>();
+
+            if (uiManager != null && gameController != null)
             {
-                // মাস্টার ক্লায়েন্ট কল করবে, কিন্তু আমরা নিশ্চিত করছি এটি গেমপ্লের সব ক্লায়েন্টের কাছে যায়
-                controller.RPC_TriggerGameLoading();
+                // UI Manager কে কল করে লোডিং স্ক্রিন দেখানো হচ্ছে
+                uiManager.StartGameSpecificLoading(() => 
+                {
+                    // ৩ সেকেন্ড লোডিংয়ের পর গেমপ্লের রাউন্ড শুরু হবে
+                    gameController.StartGameRound();
+                });
             }
             else
             {
-                Debug.LogWarning("GameplayController is not yet initialized or spawned on the Master Client!");
+                Debug.LogError("UIManager or GameplayController is missing in the scene!");
             }
         }
     }

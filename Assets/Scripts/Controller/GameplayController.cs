@@ -1,6 +1,5 @@
 using UnityEngine;
 using Fusion;
-using System.Linq;
 
 public class GameplayController : NetworkBehaviour
 {
@@ -14,53 +13,24 @@ public class GameplayController : NetworkBehaviour
     private int myWeaponIndex = -1;
     private int opponentWeaponIndex = -1;
 
-    // Awake সবকিছুর আগে কল হয়, তাই রেফারেন্সগুলো এখানে নেওয়াই সবচেয়ে নিরাপদ
     private void Awake()
     {
         Instance = this; 
         uiManager = FindAnyObjectByType<UIManager>(); 
-
-        if (uiManager == null) 
-        {
-            Debug.LogError("CRITICAL ERROR: UIManager খুঁজে পাওয়া যায়নি!");
-        }
     }
 
-    // Spawned কল হয় যখন অবজেক্টটি Fusion সার্ভারে সফলভাবে কানেক্ট হয়
     public override void Spawned()
     {
-        Debug.Log("GameplayController Successfully Spawned on Network!");
-
         if (Object.HasStateAuthority)
         {
             round = 1;
             p1Score = 0;
             p2Score = 0;
-
-            // Safety fallback: if 2 players are already in the session, start the game
-            if (Runner.ActivePlayers.Count() == 2)
-            {
-                Debug.Log("Both players are already present on Spawn. Triggering game loading...");
-                RPC_TriggerGameLoading();
-            }
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_TriggerGameLoading()
-    {
-        Debug.Log("RPC_TriggerGameLoading Received! UI Change starting...");
-
-        if (uiManager == null) return;
-
-        uiManager.StartGameSpecificLoading(() => 
-        {
-            Debug.Log("Loading Complete. Showing Weapon Select Panel...");
-            StartGameRound();
-        });
-    }
-
-    private void StartGameRound()
+    // এখন এটি public, তাই MatchmakingManager সরাসরি একে কল করতে পারবে
+    public void StartGameRound()
     {
         myWeaponIndex = -1;
         opponentWeaponIndex = -1;
@@ -73,8 +43,6 @@ public class GameplayController : NetworkBehaviour
         if (myWeaponIndex != -1) return;
         
         myWeaponIndex = weaponIndex;
-        Debug.Log($"I selected weapon index: {weaponIndex}");
-        
         RPC_ReceiveOpponentWeapon(weaponIndex);
         CheckRoundResult();
     }
@@ -83,19 +51,13 @@ public class GameplayController : NetworkBehaviour
     public void RPC_ReceiveOpponentWeapon(int weaponIndex)
     {
         opponentWeaponIndex = weaponIndex;
-        Debug.Log($"Opponent selected weapon index: {weaponIndex}");
         CheckRoundResult();
     }
 
     private void CheckRoundResult()
     {
-        if (myWeaponIndex == -1 || opponentWeaponIndex == -1) 
-        {
-            Debug.Log("Waiting for both players to select weapons...");
-            return;
-        }
+        if (myWeaponIndex == -1 || opponentWeaponIndex == -1) return;
 
-        Debug.Log("Both players selected! Calculating result...");
         bool iWon = DetermineWinner(myWeaponIndex, opponentWeaponIndex);
         
         if (Object.HasStateAuthority)
