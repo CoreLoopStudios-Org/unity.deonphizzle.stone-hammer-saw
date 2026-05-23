@@ -34,6 +34,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             GameMode = GameMode.Shared,
             SessionName = null,
+            Scene = SceneRef.FromIndex(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex),
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
