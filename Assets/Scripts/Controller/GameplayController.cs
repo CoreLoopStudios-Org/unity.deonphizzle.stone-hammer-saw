@@ -12,6 +12,9 @@ public class GameplayController : NetworkBehaviour
 
     private int myWeaponIndex = -1;
     private int opponentWeaponIndex = -1;
+    
+    // নেটওয়ার্ক রেডি কি না তা চেক করার জন্য
+    private bool isNetworkReady = false; 
 
     private void Awake()
     {
@@ -21,6 +24,9 @@ public class GameplayController : NetworkBehaviour
 
     public override void Spawned()
     {
+        isNetworkReady = true; 
+        Debug.Log("✅ Fusion is READY! Network Object Spawned Successfully.");
+        
         if (Object.HasStateAuthority)
         {
             round = 1;
@@ -29,9 +35,16 @@ public class GameplayController : NetworkBehaviour
         }
     }
 
-    // এখন এটি public, তাই MatchmakingManager সরাসরি একে কল করতে পারবে
     public void StartGameRound()
     {
+        // যদি ফিউশন এখনো রেডি না হয়, তবে লগ দেখাবে এবং আধা সেকেন্ড পর আবার ট্রাই করবে
+        if (!isNetworkReady)
+        {
+            Debug.LogWarning("⏳ Fusion is NOT READY yet! Waiting for 0.5 seconds to start the round...");
+            Invoke("StartGameRound", 0.5f); 
+            return;
+        }
+
         myWeaponIndex = -1;
         opponentWeaponIndex = -1;
         uiManager.ShowWeaponSelect();
@@ -40,6 +53,13 @@ public class GameplayController : NetworkBehaviour
 
     public void SelectWeapon(int weaponIndex)
     {
+        // নেটওয়ার্ক রেডি হওয়ার আগে বাটনে ক্লিক করলে এই লগ দেখাবে
+        if (!isNetworkReady)
+        {
+            Debug.LogWarning("⚠️ Cannot select weapon! Fusion is still loading...");
+            return;
+        }
+
         if (myWeaponIndex != -1) return;
         
         myWeaponIndex = weaponIndex;
