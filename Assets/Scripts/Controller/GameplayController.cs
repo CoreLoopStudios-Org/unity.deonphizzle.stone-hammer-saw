@@ -10,11 +10,19 @@ public class GameplayController : NetworkBehaviour
     [Networked] private int masterScore { get; set; } 
     [Networked] private int clientScore { get; set; } 
 
+    // সার্ভার-সাইড ট্র্যাকিং (শুধু মাস্টার জানবে কে কী সিলেক্ট করেছে)
+    private int masterSelectedWeapon = -1;
+    private int clientSelectedWeapon = -1;
+    private int playersReadyForNextRound = 0;
+
+    // লোকাল ট্র্যাকিং
     private int myWeaponIndex = -1;
     private int opponentWeaponIndex = -1;
     
     private bool isNetworkReady = false; 
     private bool iWonCurrentRound = false; 
+    private bool isCurrentRoundDraw = false;
+    private bool hasClickedNextRound = false; // বাটন স্প্যামিং প্রোটেকশন
 
     private void Awake()
     {
@@ -43,56 +51,109 @@ public class GameplayController : NetworkBehaviour
             return;
         }
 
+        // লোকাল ভ্যালু ও বাটন স্ট্যাটাস রিসেট
         myWeaponIndex = -1;
         opponentWeaponIndex = -1;
+        iWonCurrentRound = false;
+        isCurrentRoundDraw = false;
+        hasClickedNextRound = false;
 
         int myScore = Object.HasStateAuthority ? masterScore : clientScore;
         int enemyScore = Object.HasStateAuthority ? clientScore : masterScore;
 
         uiManager.ShowWeaponSelect();
         uiManager.UpdateRoundUI(round, myScore, enemyScore);
+
+        // সার্ভার-সাইড টাইমআউট (১০ সেকেন্ড পর অটোমেটিক রেজাল্ট, কেউ AFK থাকলে)
+        if (Object.HasStateAuthority)
+        {
+            CancelInvoke("ServerForceEndRound");
+            Invoke("ServerForceEndRound", 10f);
+        }
     }
 
-    // --- SlotMachineSelector থেকে এই ফাংশনটি কল হবে ---
     public void SelectWeapon(int weaponIndex)
     {
-        if (!isNetworkReady)
-        {
-            Debug.LogWarning("⚠️ Cannot select weapon! Fusion is still loading...");
-            return;
-        }
-
-        // ডাবল সিলেকশন প্রিভেন্ট করা
-        if (myWeaponIndex != -1) return;
+        if (!isNetworkReady || myWeaponIndex != -1) return;
         
         myWeaponIndex = weaponIndex;
-        Debug.Log($"Weapon Selected: {weaponIndex}. Sending to Network...");
+        Debug.Log($"Weapon Selected: {weaponIndex}. Sending to Server...");
         
-        RPC_ReceiveOpponentWeapon(weaponIndex);
-        CheckRoundResult();
+        // স্টেট অথরিটির (Master) কাছে নিজের সিলেকশন পাঠানো
+        RPC_SubmitWeapon(weaponIndex, Object.HasStateAuthority);
     }
 
-    [Rpc(RpcSources.All, RpcTargets.Proxies)]
-    public void RPC_ReceiveOpponentWeapon(int weaponIndex)
-    {
-        opponentWeaponIndex = weaponIndex;
-        CheckRoundResult();
-    }
+    // =======================================================
+    // সিকিউর সার্ভার লজিক
+    // =======================================================
 
-    private void CheckRoundResult()
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_SubmitWeapon(int weaponIndex, bool isMasterClient)
     {
-        // যখনই নিজের এবং প্রতিপক্ষের আইডি সেট হবে, তখনই রেজাল্ট চেক করবে
-        if (myWeaponIndex == -1 || opponentWeaponIndex == -1) return;
+        if (isMasterClient) masterSelectedWeapon = weaponIndex;
+        else clientSelectedWeapon = weaponIndex;
 
-        bool iAmMaster = Object.HasStateAuthority;
-        bool iWon = DetermineWinner(myWeaponIndex, opponentWeaponIndex);
-        iWonCurrentRound = iWon;
-        
-        if (iAmMaster)
+        // দুজনই সিলেক্ট করে ফেললে রেজাল্ট ক্যালকুলেট হবে
+        if (masterSelectedWeapon != -1 && clientSelectedWeapon != -1)
         {
-            if (iWon) masterScore++; else clientScore++;
+            ResolveRoundOnServer();
+        }
+    }
+
+    private void ServerForceEndRound()
+    {
+        // টাইমআউট হলে যারা সিলেক্ট করেনি তাদের র‍্যান্ডম অস্ত্র দেওয়া হবে
+        if (masterSelectedWeapon == -1) masterSelectedWeapon = Random.Range(0, 5);
+        if (clientSelectedWeapon == -1) clientSelectedWeapon = Random.Range(0, 5);
+        
+        ResolveRoundOnServer();
+    }
+
+    private void ResolveRoundOnServer()
+    {
+        CancelInvoke("ServerForceEndRound");
+
+        bool isDraw = masterSelectedWeapon == clientSelectedWeapon;
+        bool masterWon = DetermineWinner(masterSelectedWeapon, clientSelectedWeapon);
+
+        // ড্র হলে স্কোর আপডেট হবে না
+        if (!isDraw)
+        {
+            if (masterWon) masterScore++;
+            else clientScore++;
         }
 
+        // রেজাল্ট দুজনকে একসাথে ব্রডকাস্ট করা
+        RPC_BroadcastRoundResult(masterSelectedWeapon, clientSelectedWeapon);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_BroadcastRoundResult(int finalMasterWeapon, int finalClientWeapon)
+    {
+        // সার্ভার ভ্যালু রিসেট
+        if (Object.HasStateAuthority)
+        {
+            masterSelectedWeapon = -1;
+            clientSelectedWeapon = -1;
+            playersReadyForNextRound = 0;
+        }
+
+        // লোকাল ক্লায়েন্টকে তার এবং প্রতিপক্ষের অস্ত্র জানিয়ে দেওয়া
+        if (Object.HasStateAuthority)
+        {
+            myWeaponIndex = finalMasterWeapon;
+            opponentWeaponIndex = finalClientWeapon;
+        }
+        else
+        {
+            myWeaponIndex = finalClientWeapon;
+            opponentWeaponIndex = finalMasterWeapon;
+        }
+
+        isCurrentRoundDraw = myWeaponIndex == opponentWeaponIndex;
+        iWonCurrentRound = !isCurrentRoundDraw && DetermineWinner(myWeaponIndex, opponentWeaponIndex);
+
+        // UI আপডেট
         uiManager.SetRoundComplete(round - 1);
         uiManager.ShowCharacterBattle();
         
@@ -101,175 +162,79 @@ public class GameplayController : NetworkBehaviour
 
     private void ShowRoundResultPanel()
     {
+        // যদি ড্র হয়, তবে আপনি ভবিষ্যতে এখানে uiManager.ShowDrawScreen() অ্যাড করতে পারেন
         if (iWonCurrentRound) uiManager.ShowWinScreen(round, false);
         else uiManager.ShowLossScreen(round, false);
     }
 
+    // =======================================================
+    // নেক্সট রাউন্ড সিঙ্ক লজিক
+    // =======================================================
+
     public void TriggerNextRound()
     {
-        if (round < 3) 
+        // স্প্যাম ক্লিক বন্ধ করা হলো
+        if (hasClickedNextRound) return;
+        hasClickedNextRound = true;
+
+        Debug.Log("Next Round triggered. Waiting for opponent...");
+        RPC_SetReadyForNextRound();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_SetReadyForNextRound()
+    {
+        playersReadyForNextRound++;
+        
+        // দুজন রেডি হলে তবেই নতুন রাউন্ড বা ফাইনাল রেজাল্ট আসবে
+        if (playersReadyForNextRound == 2)
         {
-            if (Object.HasStateAuthority) round++; 
-            Invoke("StartGameRound", 0.2f);
+            if (round < 3) 
+            {
+                round++; 
+                RPC_StartNextRoundSynced();
+            }
+            else 
+            {
+                RPC_ShowFinalResult();
+            }
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_StartNextRoundSynced()
+    {
+        Invoke("StartGameRound", 0.2f);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_ShowFinalResult()
+    {
+        bool iAmMaster = Object.HasStateAuthority;
+        bool masterWonFinal = masterScore > clientScore;
+        bool iWonFinal = iAmMaster ? masterWonFinal : !masterWonFinal;
+
+        // যদি ফাইনাল স্কোর সমান হয় (Draw)
+        if (masterScore == clientScore)
+        {
+            uiManager.ShowLossScreen(round, true); 
+        }
+        else if (iWonFinal) 
+        {
+            uiManager.ShowWinScreen(round, true);
         }
         else 
         {
-            bool iAmMaster = Object.HasStateAuthority;
-            bool masterWonFinal = masterScore > clientScore;
-            bool iWonFinal = iAmMaster ? masterWonFinal : !masterWonFinal;
-
-            if (iWonFinal) uiManager.ShowWinScreen(round, true);
-            else uiManager.ShowLossScreen(round, true);
+            uiManager.ShowLossScreen(round, true);
         }
     }
 
     private bool DetermineWinner(int mine, int opp)
     {
         if (mine == opp) return false; 
-        // আপনার গেমের লজিক: 0=Saw, 1=Hammer, 2=Rock, ইত্যাদি (ID অনুযায়ী অ্যাডজাস্ট করুন)
         if ((mine == 2 && (opp == 0 || opp == 3 || opp == 1)) || 
             (mine == 4 && (opp == 3 || opp == 0)) ||
             (mine == 1 && opp == 0) || (mine == 0 && opp == 3)) return true;
         return false;
     }
 }
-// using UnityEngine;
-// using Fusion;
-//
-// public class GameplayController : NetworkBehaviour
-// {
-//     public static GameplayController Instance; 
-//     private UIManager uiManager;
-//
-//     [Networked] private int round { get; set; }
-//     
-//     // লোকাল প্লেয়ারকে সবসময় বামে (P1) দেখানোর জন্য স্কোর আলাদা করা হলো
-//     [Networked] private int masterScore { get; set; } 
-//     [Networked] private int clientScore { get; set; } 
-//
-//     private int myWeaponIndex = -1;
-//     private int opponentWeaponIndex = -1;
-//     
-//     private bool isNetworkReady = false; 
-//     private bool iWonCurrentRound = false; // বর্তমান রাউন্ড কে জিতেছে তা মনে রাখার জন্য
-//
-//     private void Awake()
-//     {
-//         Instance = this; 
-//         uiManager = FindAnyObjectByType<UIManager>(); 
-//     }
-//
-//     public override void Spawned()
-//     {
-//         isNetworkReady = true; 
-//         Debug.Log("✅ Fusion is READY! Network Object Spawned Successfully.");
-//         
-//         if (Object.HasStateAuthority)
-//         {
-//             round = 1;
-//             masterScore = 0;
-//             clientScore = 0;
-//         }
-//     }
-//
-//     public void StartGameRound()
-//     {
-//         if (!isNetworkReady)
-//         {
-//             Debug.LogWarning("⏳ Fusion is NOT READY yet! Waiting for 0.5 seconds to start the round...");
-//             Invoke("StartGameRound", 0.5f); 
-//             return;
-//         }
-//
-//         myWeaponIndex = -1;
-//         opponentWeaponIndex = -1;
-//
-//         // আমি মাস্টার হলে আমার স্কোর masterScore, নাহলে clientScore
-//         int myScore = Object.HasStateAuthority ? masterScore : clientScore;
-//         int enemyScore = Object.HasStateAuthority ? clientScore : masterScore;
-//
-//         uiManager.ShowWeaponSelect();
-//         uiManager.UpdateRoundUI(round, myScore, enemyScore);
-//     }
-//
-//     public void SelectWeapon(int weaponIndex)
-//     {
-//         if (!isNetworkReady)
-//         {
-//             Debug.LogWarning("⚠️ Cannot select weapon! Fusion is still loading...");
-//             return;
-//         }
-//
-//         if (myWeaponIndex != -1) return;
-//         
-//         myWeaponIndex = weaponIndex;
-//         RPC_ReceiveOpponentWeapon(weaponIndex);
-//         CheckRoundResult();
-//     }
-//
-//     [Rpc(RpcSources.All, RpcTargets.Proxies)]
-//     public void RPC_ReceiveOpponentWeapon(int weaponIndex)
-//     {
-//         opponentWeaponIndex = weaponIndex;
-//         CheckRoundResult();
-//     }
-//
-//     private void CheckRoundResult()
-//     {
-//         if (myWeaponIndex == -1 || opponentWeaponIndex == -1) return;
-//
-//         bool iAmMaster = Object.HasStateAuthority;
-//         bool iWon = DetermineWinner(myWeaponIndex, opponentWeaponIndex);
-//         iWonCurrentRound = iWon;
-//         
-//         // শুধু মাস্টার ক্লায়েন্ট গ্লোবাল স্কোর আপডেট করবে
-//         if (iAmMaster)
-//         {
-//             if (iWon) masterScore++; else clientScore++;
-//         }
-//
-//         uiManager.SetRoundComplete(round - 1);
-//         uiManager.ShowCharacterBattle();
-//         
-//         // Character Panel ঠিক ৫ সেকেন্ড দেখানোর পর Win/Loss প্যানেল আসবে
-//         Invoke("ShowRoundResultPanel", 5f);
-//     }
-//
-//     private void ShowRoundResultPanel()
-//     {
-//         if (iWonCurrentRound) uiManager.ShowWinScreen(round, false);
-//         else uiManager.ShowLossScreen(round, false);
-//     }
-//
-//     // UIManager-এর "NEXT ROUND" বাটনে ক্লিক করলে এটি কল হবে
-//     public void TriggerNextRound()
-//     {
-//         if (round < 3) 
-//         {
-//             // রাউন্ড আপডেট শুধু মাস্টার করবে
-//             if (Object.HasStateAuthority) round++; 
-//             Invoke("StartGameRound", 0.2f); // একটু ডিলে দিয়ে নতুন রাউন্ড শুরু
-//         }
-//         else 
-//         {
-//             // ৩ রাউন্ড শেষ! ফাইনাল উইনার চেক করা হচ্ছে
-//             bool iAmMaster = Object.HasStateAuthority;
-//             bool masterWonFinal = masterScore > clientScore;
-//             
-//             bool iWonFinal = iAmMaster ? masterWonFinal : !masterWonFinal;
-//
-//             // ফাইনাল রেজাল্ট প্যানেল দেখানো
-//             if (iWonFinal) uiManager.ShowWinScreen(round, true);
-//             else uiManager.ShowLossScreen(round, true);
-//         }
-//     }
-//
-//     private bool DetermineWinner(int mine, int opp)
-//     {
-//         if (mine == opp) return false; 
-//         if ((mine == 2 && (opp == 0 || opp == 3 || opp == 1)) || 
-//             (mine == 4 && (opp == 3 || opp == 0)) ||
-//             (mine == 1 && opp == 0) || (mine == 0 && opp == 3)) return true;
-//         return false;
-//     }
-// }

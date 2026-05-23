@@ -7,7 +7,6 @@ using System.Linq;
 
 public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    // Inspector-এ নতুন তৈরি করা "FusionRunner" গেম অবজেক্টটি এখানে ড্র্যাগ করে দিন
     public NetworkRunner runner;
 
     public async void StartMatchmaking()
@@ -26,10 +25,8 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
             runner = runnerGo.AddComponent<NetworkRunner>();
         }
 
-        // কলব্যাকগুলো রেজিস্টার করা
         runner.AddCallbacks(this);
 
-        // Shared Mode-এ গেম শুরু করা
         var result = await runner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
@@ -44,12 +41,10 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.LogError($"Failed to join: {result.ShutdownReason}");
     }
 
-    // MatchmakingManager.cs এর OnPlayerJoined এ পরিবর্তন করুন:
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         Debug.Log($"Player Joined! Total Players: {runner.ActivePlayers.Count()}");
 
-        // যখনই ২ জন প্লেয়ার হবে, সরাসরি লোকালি গেম শুরু করে দিন (কোনো RPC ছাড়া)
         if (runner.ActivePlayers.Count() == 2)
         {
             Debug.Log("2 Players Connected! Starting Game Locally...");
@@ -59,11 +54,10 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
             if (uiManager != null && gameController != null)
             {
-                // UI Manager কে কল করে লোডিং স্ক্রিন দেখানো হচ্ছে
                 uiManager.StartGameSpecificLoading(() => 
                 {
-                    // ৩ সেকেন্ড লোডিংয়ের পর গেমপ্লের রাউন্ড শুরু হবে
-                    gameController.StartGameRound();
+                    // Fusion পুরোপুরি রেডি হওয়ার জন্য সামান্য ডিলে দেওয়া হলো
+                    Invoke(nameof(CallStartGameRound), 0.5f);
                 });
             }
             else
@@ -73,7 +67,13 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // Fusion এর সব প্রয়োজনীয় কলব্যাক (কিছুই পরিবর্তন করবেন না)
+    private void CallStartGameRound()
+    {
+        GameplayController gameController = FindAnyObjectByType<GameplayController>();
+        if(gameController != null) gameController.StartGameRound();
+    }
+
+    // Fusion এর অন্যান্য কলব্যাকগুলো
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
