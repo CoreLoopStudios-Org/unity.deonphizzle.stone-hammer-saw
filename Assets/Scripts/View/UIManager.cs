@@ -6,10 +6,10 @@ using DG.Tweening;
 public class UIManager : MonoBehaviour
 {
     [Header("App Flow Panels")]
-    public GameObject appLoadingPanel;         // 1. Loading-Panel
-    public GameObject characterSelectionPanel; // 2. CharacterSelectionPanel
-    public GameObject gameSelectionPanel;      // 3. Game-Selection-Panel
-    public GameObject gameLoadingPanel;        // 4. Stone-saw-hammer-Panel
+    public GameObject appLoadingPanel;         
+    public GameObject characterSelectionPanel; 
+    public GameObject gameSelectionPanel;      
+    public GameObject gameLoadingPanel;        
 
     [Header("Game Panels")]
     public GameObject weaponSelectPanel;
@@ -18,35 +18,35 @@ public class UIManager : MonoBehaviour
     public GameObject lossPanel;
 
     [Header("UI Elements")]
-    public Image appLoadingBar;       // Loading-Panel এর Filled-progress
+    public Image appLoadingBar;       
     public TextMeshProUGUI appLoadingText; 
     public TMP_InputField playerNameInput; 
-    public Image gameLoadingBar;      // Stone-saw-hammer-Panel এর Filled-progress
+    public Image gameLoadingBar;      
 
     [Header("Gameplay UI")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI roundText;
     public Image progressBar;
     public Image[] roundCheckmarks;
+    
+    [Header("Round Result Texts")]
+    public TextMeshProUGUI winRoundText;  // Win Panel-এর উপরের Text (e.g., Round 1 completed)
+    public TextMeshProUGUI lossRoundText; // Loss Panel-এর উপরের Text
+
+    // Character Panel-এ স্কোর দেখানোর জন্য একটি টেক্সট রাখতে পারেন (ঐচ্ছিক)
+    public TextMeshProUGUI characterPanelScoreText; 
 
     private int selectedCharacterIndex = -1;
 
     private void Start()
     {
-        Debug.Log("UIManager: Starting App Loading...");
         ShowPanel(appLoadingPanel);
         StartAppLoading();
     }
 
     private void StartAppLoading()
     {
-        if (appLoadingBar == null)
-        {
-            Debug.LogError("UIManager: App Loading Bar is NULL! Please assign it in the Inspector.");
-            ShowPanel(characterSelectionPanel);
-            return;
-        }
-
+        if (appLoadingBar == null) return;
         appLoadingBar.fillAmount = 0f;
         
         if(appLoadingText != null)
@@ -55,60 +55,31 @@ public class UIManager : MonoBehaviour
         appLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
         {
             if(appLoadingText != null) appLoadingText.DOKill();
-            Debug.Log("UIManager: App Loading Complete. Going to Character Selection.");
             ShowPanel(characterSelectionPanel); 
         });
     }
 
-    public void SelectCharacter(int index)
-    {
-        selectedCharacterIndex = index;
-        Debug.Log("UIManager: Character Selected -> " + index);
-    }
+    public void SelectCharacter(int index) => selectedCharacterIndex = index;
 
     public void GoToGameSelection()
     {
-        if (playerNameInput == null || string.IsNullOrEmpty(playerNameInput.text))
-        {
-            Debug.LogWarning("UIManager: Please enter your name!");
-            return;
-        }
-
-        if (selectedCharacterIndex == -1)
-        {
-            Debug.LogWarning("UIManager: Please select a character!");
-            return;
-        }
-
-        Debug.Log("UIManager: Character and Name accepted. Moving to Game Selection.");
+        if (playerNameInput == null || string.IsNullOrEmpty(playerNameInput.text) || selectedCharacterIndex == -1) return;
         ShowPanel(gameSelectionPanel);
     }
 
-    // ম্যাচমেকিং হওয়ার পর গেমের স্পেসিফিক লোডিং
     public void StartGameSpecificLoading(System.Action onComplete)
     {
-        Debug.Log("UIManager: StartGameSpecificLoading Triggered!");
         ShowPanel(gameLoadingPanel);
-
         if (gameLoadingBar != null)
         {
             gameLoadingBar.fillAmount = 0f;
-            gameLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
-            {
-                Debug.Log("UIManager: Game Specific Loading Complete! Calling onComplete Action.");
-                onComplete?.Invoke(); 
-            });
+            gameLoadingBar.DOFillAmount(1f, 3f).OnComplete(() => onComplete?.Invoke());
         }
-        else
-        {
-            Debug.LogError("UIManager: Game Loading Bar is NULL! Skipping animation.");
-            onComplete?.Invoke(); // এরর থাকলেও যেন গেম আটকে না যায়
-        }
+        else onComplete?.Invoke(); 
     }
 
     public void ShowWeaponSelect()
     {
-        Debug.Log("UIManager: Showing Weapon Select Panel");
         ShowPanel(weaponSelectPanel);
         StartTimer();
     }
@@ -117,49 +88,54 @@ public class UIManager : MonoBehaviour
     {
         if (timerText != null)
         {
-            float currentTime = 3f;
-            DOTween.To(() => currentTime, x => currentTime = x, 0f, 3f)
+            float currentTime = 5f; // টাইমার ৩ থেকে ৫ সেকেন্ড করা হলো
+            DOTween.To(() => currentTime, x => currentTime = x, 0f, 5f)
                 .SetEase(Ease.Linear)
-                .OnUpdate(() => timerText.text = "0" + Mathf.CeilToInt(currentTime).ToString() + ":00")
-                .OnComplete(() => Debug.Log("UIManager: Weapon Timer Finished"));
-        }
-        else
-        {
-            Debug.LogWarning("UIManager: timerText is NULL!");
+                .OnUpdate(() => timerText.text = "0" + Mathf.CeilToInt(currentTime).ToString() + ":00");
         }
     }
 
-    public void UpdateRoundUI(int round, int p1Score, int p2Score)
+    // লোকাল প্লেয়ার সবসময় বামে (P1) থাকবে, তাই স্কোর সেভাবেই ফরম্যাট করা হবে
+    public void UpdateRoundUI(int round, int myScore, int enemyScore)
     {
         if (roundText != null) roundText.text = "Round: " + round + "/3";
         if (progressBar != null) progressBar.DOFillAmount(round / 3f, 0.5f);
+        
+        if (characterPanelScoreText != null) 
+            characterPanelScoreText.text = $"P1: {myScore}   P2: {enemyScore}";
     }
 
     public void SetRoundComplete(int roundIndex)
     {
         if (roundCheckmarks != null && roundIndex >= 0 && roundIndex < roundCheckmarks.Length)
-        {
-            if (roundCheckmarks[roundIndex] != null)
-                roundCheckmarks[roundIndex].gameObject.SetActive(true);
-        }
+            if (roundCheckmarks[roundIndex] != null) roundCheckmarks[roundIndex].gameObject.SetActive(true);
     }
 
     public void ShowCharacterBattle() => ShowPanel(characterPanel);
-    public void ShowWinScreen() => ShowPanel(winPanel);
-    public void ShowLossScreen() => ShowPanel(lossPanel);
 
-    // সেফটি চেক সহ প্যানেল পরিবর্তন
+    // রাউন্ড কমপ্লিট টেক্সট আপডেট করে Win/Loss প্যানেল দেখানো
+    public void ShowWinScreen(int round, bool isFinal = false) 
+    { 
+        ShowPanel(winPanel); 
+        if (winRoundText != null) winRoundText.text = isFinal ? "YOU WON THE MATCH!" : $"Round {round} completed ✓";
+    }
+
+    public void ShowLossScreen(int round, bool isFinal = false) 
+    { 
+        ShowPanel(lossPanel); 
+        if (lossRoundText != null) lossRoundText.text = isFinal ? "YOU LOST THE MATCH!" : $"Round {round} completed ✓";
+    }
+
+    // NEXT ROUND বাটনে ক্লিক করলে এটি কল হবে
+    public void OnNextRoundButtonClicked()
+    {
+        if(GameplayController.Instance != null)
+            GameplayController.Instance.TriggerNextRound();
+    }
+
     private void ShowPanel(GameObject panelToShow)
     {
-        if (panelToShow == null)
-        {
-            Debug.LogError("UIManager: You are trying to show a NULL panel. Check the Inspector!");
-            return;
-        }
-
-        Debug.Log($"UIManager: Activating Panel -> {panelToShow.name}");
-
-        // null চেক করে প্যানেল অফ করা (যাতে কোনো প্যানেল লিঙ্ক না থাকলেও এরর না দেয়)
+        if (panelToShow == null) return;
         if (appLoadingPanel != null) appLoadingPanel.SetActive(false);
         if (characterSelectionPanel != null) characterSelectionPanel.SetActive(false);
         if (gameSelectionPanel != null) gameSelectionPanel.SetActive(false);
