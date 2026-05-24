@@ -25,6 +25,9 @@ public class GameplayController : NetworkBehaviour
     private bool isCurrentRoundDraw = false;
     private bool hasClickedNextRound = false; // বাটন স্প্যামিং প্রোটেকশন
 
+    private bool isHostReady = false;
+    private bool isClientReady = false;
+
     private void Awake()
     {
         Instance = this; 
@@ -41,19 +44,45 @@ public class GameplayController : NetworkBehaviour
             round = 1;
             masterScore = 0;
             clientScore = 0;
-        }
+            isHostReady = true;
+            Debug.Log("Host is ready, waiting for client reporting...");
 
-        // If the room has 2 players when this object spawns (typically happens on the client side after scene load)
-        if (Runner.ActivePlayers.Count() == 2)
+            TryStartGameLoading();
+        }
+        else
         {
-            Debug.Log("[GameplayController] Room is full on Spawned. Initializing game start flow on this client...");
-            if (uiManager != null)
+            Debug.Log("Client reporting ready to Host...");
+            RPC_ReportReadyToHost();
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_ReportReadyToHost()
+    {
+        isClientReady = true;
+        Debug.Log("Host received: Client is ready!");
+        TryStartGameLoading();
+    }
+
+    private void TryStartGameLoading()
+    {
+        if (Object.HasStateAuthority && isHostReady && isClientReady)
+        {
+            Debug.Log("Both Host and Client are ready! Triggering synchronized loading bar...");
+            RPC_StartLoadingForEveryone();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_StartLoadingForEveryone()
+    {
+        Debug.Log("Loading panel starting on this device...");
+        if (uiManager != null)
+        {
+            uiManager.StartGameSpecificLoading(() => 
             {
-                uiManager.StartGameSpecificLoading(() => 
-                {
-                    StartGameRound();
-                });
-            }
+                StartGameRound();
+            });
         }
     }
 

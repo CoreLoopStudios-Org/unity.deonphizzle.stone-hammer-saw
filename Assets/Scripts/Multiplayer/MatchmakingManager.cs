@@ -47,25 +47,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner.ActivePlayers.Count() == 2)
         {
-            Debug.Log("2 Players Connected! Starting Game Locally...");
-            
-            UIManager uiManager = FindObjectOfType<UIManager>();
-            GameplayController gameController = FindObjectOfType<GameplayController>();
-
-            if (uiManager != null && gameController != null)
-            {
-                uiManager.StartGameSpecificLoading(() => 
-                {
-                    // Fusion পুরোপুরি রেডি হওয়ার জন্য সামান্য ডিলে দেওয়া হলো
-                    Invoke(nameof(CallStartGameRound), 0.5f);
-                });
-            }
-            else
-            {
-                // If UIManager or GameplayController is null, it means we are likely on the client where scene objects haven't finished spawning.
-                // This is expected and will be handled by GameplayController's Spawned() callback.
-                Debug.Log("[MatchmakingManager] UIManager or GameplayController is not ready in the scene yet. Waiting for Spawned()...");
-            }
+            Debug.Log("[MatchmakingManager] 2 Players connected. Synchronized game startup will be initiated by GameplayController.");
         }
     }
 

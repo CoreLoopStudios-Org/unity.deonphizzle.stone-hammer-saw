@@ -6,7 +6,7 @@ using DG.Tweening;
 public class SlotMachineManager : MonoBehaviour
 {
     public ScrollRect scrollRect;
-    public float scrollSpeed = 1.5f;
+    public float scrollSpeed = 3.5f;
     public List<RectTransform> weaponItems;
     public GameObject highlightOverlay;
     
@@ -22,6 +22,7 @@ public class SlotMachineManager : MonoBehaviour
         isSpinning = true;
         if (scrollRect != null)
         {
+            scrollRect.velocity = Vector2.zero; // Clear inertia
             scrollRect.verticalNormalizedPosition = 0f;
         }
         CancelInvoke("StopSpinning");
@@ -45,6 +46,11 @@ public class SlotMachineManager : MonoBehaviour
         
         isSpinning = false;
         CancelInvoke("StopSpinning"); // 3s er timer ti bondho kore dilam
+
+        if (scrollRect != null)
+        {
+            scrollRect.velocity = Vector2.zero; // Clear inertia
+        }
 
         float pos = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
         float segment = 1f / 5f; 
