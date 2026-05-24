@@ -28,7 +28,7 @@ public class GameplayController : NetworkBehaviour
     private void Awake()
     {
         Instance = this; 
-        uiManager = FindAnyObjectByType<UIManager>(); 
+        uiManager = FindObjectOfType<UIManager>(); 
     }
 
     public override void Spawned()
@@ -65,6 +65,15 @@ public class GameplayController : NetworkBehaviour
             return;
         }
 
+        if (Object.HasStateAuthority)
+        {
+            RPC_StartRoundForEveryone();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_StartRoundForEveryone()
+    {
         // লোকাল ভ্যালু ও বাটন স্ট্যাটাস রিসেট
         myWeaponIndex = -1;
         opponentWeaponIndex = -1;
@@ -75,8 +84,18 @@ public class GameplayController : NetworkBehaviour
         int myScore = Object.HasStateAuthority ? masterScore : clientScore;
         int enemyScore = Object.HasStateAuthority ? clientScore : masterScore;
 
-        uiManager.ShowWeaponSelect();
-        uiManager.UpdateRoundUI(round, myScore, enemyScore);
+        if (uiManager != null)
+        {
+            uiManager.ShowWeaponSelect();
+            uiManager.UpdateRoundUI(round, myScore, enemyScore);
+        }
+
+        // Reset and start spin slot machine
+        SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
+        if (slotMachine != null)
+        {
+            slotMachine.ResetAndStartSpin();
+        }
 
         // সার্ভার-সাইড টাইমআউট (১০ সেকেন্ড পর অটোমেটিক রেজাল্ট, কেউ AFK থাকলে)
         if (Object.HasStateAuthority)
@@ -176,8 +195,8 @@ public class GameplayController : NetworkBehaviour
 
     private void ShowRoundResultPanel()
     {
-        // যদি ড্র হয়, তবে আপনি ভবিষ্যতে এখানে uiManager.ShowDrawScreen() অ্যাড করতে পারেন
-        if (iWonCurrentRound) uiManager.ShowWinScreen(round, false);
+        if (isCurrentRoundDraw) uiManager.ShowDrawScreen(round, false);
+        else if (iWonCurrentRound) uiManager.ShowWinScreen(round, false);
         else uiManager.ShowLossScreen(round, false);
     }
 
@@ -231,7 +250,7 @@ public class GameplayController : NetworkBehaviour
         // যদি ফাইনাল স্কোর সমান হয় (Draw)
         if (masterScore == clientScore)
         {
-            uiManager.ShowLossScreen(round, true); 
+            uiManager.ShowDrawScreen(round, true); 
         }
         else if (iWonFinal) 
         {

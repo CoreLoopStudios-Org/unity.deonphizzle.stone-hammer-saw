@@ -28,6 +28,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI roundText;
     public Image progressBar;
     public Image[] roundCheckmarks;
+    public GameObject[] roundCompleteIcons; // Added for Issue 5 progress bar pop animation
     
     [Header("Round Result Texts")]
     public TextMeshProUGUI winRoundText;  // Win Panel-এর উপরের Text (e.g., Round 1 completed)
@@ -99,21 +100,57 @@ public class UIManager : MonoBehaviour
     public void UpdateRoundUI(int round, int myScore, int enemyScore)
     {
         if (roundText != null) roundText.text = "Round: " + round + "/3";
-        if (progressBar != null) progressBar.DOFillAmount(round / 3f, 0.5f);
+        if (progressBar != null) progressBar.fillAmount = (round - 1) / 3f;
         
         if (characterPanelScoreText != null) 
             characterPanelScoreText.text = $"P1: {myScore}   P2: {enemyScore}";
     }
 
+    public void UpdateProgressBar(int currentRoundCompleted)
+    {
+        if (progressBar == null) return;
+
+        float targetFill = currentRoundCompleted / 3f;
+        progressBar.DOKill();
+        progressBar.DOFillAmount(targetFill, 1.0f)
+            .SetEase(Ease.OutQuad)
+            .OnComplete(() =>
+            {
+                int checkmarkIndex = currentRoundCompleted - 1;
+
+                // Try roundCompleteIcons array first (GameObject[])
+                if (roundCompleteIcons != null && checkmarkIndex >= 0 && checkmarkIndex < roundCompleteIcons.Length)
+                {
+                    GameObject checkmarkGo = roundCompleteIcons[checkmarkIndex];
+                    if (checkmarkGo != null)
+                    {
+                        checkmarkGo.SetActive(true);
+                        checkmarkGo.transform.localScale = Vector3.zero;
+                        checkmarkGo.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
+                    }
+                }
+                // Fallback to roundCheckmarks array (Image[])
+                else if (roundCheckmarks != null && checkmarkIndex >= 0 && checkmarkIndex < roundCheckmarks.Length)
+                {
+                    Image checkmarkImg = roundCheckmarks[checkmarkIndex];
+                    if (checkmarkImg != null)
+                    {
+                        checkmarkImg.gameObject.SetActive(true);
+                        checkmarkImg.transform.localScale = Vector3.zero;
+                        checkmarkImg.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
+                    }
+                }
+            });
+    }
+
     public void SetRoundComplete(int roundIndex)
     {
-        if (roundCheckmarks != null && roundIndex >= 0 && roundIndex < roundCheckmarks.Length)
-            if (roundCheckmarks[roundIndex] != null) roundCheckmarks[roundIndex].gameObject.SetActive(true);
+        UpdateProgressBar(roundIndex + 1);
     }
 
     public void ShowCharacterBattle() => ShowPanel(characterPanel);
 
-    // রাউন্ড কমপ্লিট টেক্সট আপডেট করে Win/Loss প্যানেল দেখানো
+    // রাউন্ড কমপ্লিট টেক্সট আপডেট করে Win/Loss/Draw প্যানেল দেখানো
     public void ShowWinScreen(int round, bool isFinal = false) 
     { 
         ShowPanel(winPanel); 
@@ -124,6 +161,12 @@ public class UIManager : MonoBehaviour
     { 
         ShowPanel(lossPanel); 
         if (lossRoundText != null) lossRoundText.text = isFinal ? "YOU LOST THE MATCH!" : $"Round {round} completed ✓";
+    }
+
+    public void ShowDrawScreen(int round, bool isFinal = false) 
+    { 
+        ShowPanel(winPanel); // Reuses winPanel but sets custom draw text
+        if (winRoundText != null) winRoundText.text = isFinal ? "IT'S A DRAW!" : $"Round {round} ended in a Draw!";
     }
 
     // NEXT ROUND বাটনে ক্লিক করলে এটি কল হবে

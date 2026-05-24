@@ -4171,6 +4171,7 @@ MonoBehaviour:
   - {fileID: 828608137}
   - {fileID: 1306455089}
   - {fileID: 933737163}
+  roundCompleteIcons: []
   winRoundText: {fileID: 622139200}
   lossRoundText: {fileID: 1199159102}
   characterPanelScoreText: {fileID: 1543427773}

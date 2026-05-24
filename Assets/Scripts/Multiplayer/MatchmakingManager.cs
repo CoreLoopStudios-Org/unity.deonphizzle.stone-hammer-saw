@@ -15,7 +15,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner == null)
         {
-            runner = FindAnyObjectByType<NetworkRunner>();
+            runner = FindObjectOfType<NetworkRunner>();
         }
 
         if (runner == null)
@@ -49,8 +49,8 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.Log("2 Players Connected! Starting Game Locally...");
             
-            UIManager uiManager = FindAnyObjectByType<UIManager>();
-            GameplayController gameController = FindAnyObjectByType<GameplayController>();
+            UIManager uiManager = FindObjectOfType<UIManager>();
+            GameplayController gameController = FindObjectOfType<GameplayController>();
 
             if (uiManager != null && gameController != null)
             {
@@ -71,7 +71,7 @@ public class MatchmakingManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void CallStartGameRound()
     {
-        GameplayController gameController = FindAnyObjectByType<GameplayController>();
+        GameplayController gameController = FindObjectOfType<GameplayController>();
         if(gameController != null) gameController.StartGameRound();
     }
 

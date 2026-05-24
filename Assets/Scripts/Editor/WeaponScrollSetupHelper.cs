@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 
-public class WeaponScrollSetupHelper : EditorWindow
+public class WeaponScrollSetupHelper
 {
     [MenuItem("Tools/Stone Hammer Saw/Setup Weapon Scroll View")]
     public static void SetupScrollView()
     {
         // Find Scroll View in the active scene
-        ScrollRect scrollRect = FindAnyObjectByType<ScrollRect>();
+        ScrollRect scrollRect = Object.FindObjectOfType<ScrollRect>();
         if (scrollRect == null)
         {
             Debug.LogError("[ScrollSetup] No ScrollRect found in the active scene!");
