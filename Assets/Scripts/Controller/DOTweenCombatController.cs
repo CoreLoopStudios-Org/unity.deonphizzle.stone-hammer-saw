@@ -3,114 +3,112 @@ using DG.Tweening;
 
 public class DOTweenCombatController : MonoBehaviour
 {
-    [Header("Fighters")]
-    public Transform attacker;
-    public Transform victim;
+    [Header("Exposed Inspector Fields")]
+    [SerializeField] private Transform attackerTorso;
+    [SerializeField] private Transform attackerHand;
+    [SerializeField] private Transform victimHead;
+    [SerializeField] private Transform victimBody;
 
-    [Header("Settings")]
-    public float attackDistance = 1.3f;
-    public float lungeDuration = 0.18f;
-    public float returnDuration = 0.25f;
-    public float pushDistance = 1.8f;
-    public float fallDuration = 0.6f;
+    [Header("Sequence Settings")]
+    [SerializeField] private float windupDuration = 0.25f;
+    [SerializeField] private float strikeDuration = 0.12f;
+    [SerializeField] private float resetDuration = 0.3f;
+    [SerializeField] private float pushDistance = 1.5f;
 
-    private Animator attackerAnim;
-    private Animator victimAnim;
-    
-    private Transform attackerHand;
-    private Transform victimHead;
-
-    private Vector3 attackerStartPos;
+    // Cached starting local coordinates
     private Vector3 handOriginalLocalPos;
-    
+    private Quaternion handOriginalLocalRot;
+    private Quaternion torsoOriginalLocalRot;
+    private Vector3 victimBodyStartPos;
+
     private bool isAttacking = false;
 
     private void Start()
     {
-        if (attacker == null) attacker = this.transform;
-        if (victim == null) victim = GameObject.Find("Victim")?.transform;
-
-        if (attacker == null || victim == null)
+        // 1. Automatic Fallback Search if fields are left unassigned in the Inspector
+        if (attackerHand == null) attackerHand = FindChildRecursive(transform, "CC_Base_R_Hand");
+        if (attackerTorso == null) attackerTorso = FindChildRecursive(transform, "CC_Base_Spine01");
+        
+        GameObject victimGo = GameObject.Find("Victim");
+        if (victimGo != null)
         {
-            Debug.LogError("[DOTweenCombat] Attacker or Victim Transform is missing!");
+            if (victimBody == null) victimBody = victimGo.transform;
+            if (victimHead == null) victimHead = FindChildRecursive(victimGo.transform, "CC_Base_Head");
+        }
+
+        // Safety verification
+        if (attackerHand == null || attackerTorso == null || victimHead == null || victimBody == null)
+        {
+            Debug.LogError("[DOTweenCombat] Setup incomplete! Some Transform references are missing.");
             return;
         }
 
-        // Cache initial positions
-        attackerStartPos = attacker.position;
+        // Disable Animator component to prevent Mixamo overrides
+        Animator animator = GetComponent<Animator>();
+        if (animator != null) animator.enabled = false;
 
-        // Cache and DISABLE animators to prevent Mixamo overrides
-        attackerAnim = attacker.GetComponent<Animator>();
-        victimAnim = victim.GetComponent<Animator>();
-        if (attackerAnim != null) attackerAnim.enabled = false;
+        Animator victimAnim = victimBody.GetComponent<Animator>();
         if (victimAnim != null) victimAnim.enabled = false;
 
-        // Recursively find bone references
-        attackerHand = FindChildRecursive(attacker, "CC_Base_R_Hand");
-        victimHead = FindChildRecursive(victim, "CC_Base_Head");
-
-        if (attackerHand != null)
-        {
-            handOriginalLocalPos = attackerHand.localPosition;
-        }
-        else
-        {
-            Debug.LogError("[DOTweenCombat] CC_Base_R_Hand bone not found under Attacker!");
-        }
-
-        if (victimHead == null)
-        {
-            Debug.LogWarning("[DOTweenCombat] CC_Base_Head bone not found under Victim. Defaulting to Victim root.");
-            victimHead = victim;
-        }
+        // 2. Cache initial local coordinates
+        handOriginalLocalPos = attackerHand.localPosition;
+        handOriginalLocalRot = attackerHand.localRotation;
+        torsoOriginalLocalRot = attackerTorso.localRotation;
+        victimBodyStartPos = victimBody.position;
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
-            PlayCombatSequence();
+            PlayRealisticCombatSequence();
         }
     }
 
-    private void PlayCombatSequence()
+    private void PlayRealisticCombatSequence()
     {
-        if (attackerHand == null || victimHead == null) return;
         isAttacking = true;
 
-        Vector3 direction = (victim.position - attacker.position).normalized;
-        Vector3 targetLungePos = victim.position - (direction * attackDistance);
+        Vector3 direction = (victimBody.position - transform.position).normalized;
 
-        // Sequence Builder
-        Sequence fightSeq = DOTween.Sequence();
+        // Calculate rotation quaternions relative to the starting rotation
+        Quaternion windupTorsoRot = torsoOriginalLocalRot * Quaternion.Euler(0f, -25f, 0f);
+        Vector3 windupHandPos = handOriginalLocalPos + new Vector3(-0.08f, 0.05f, -0.15f); // Pull hand back slightly
 
-        // 1. Lunge forward & stretch the hand bone straight to the head
-        fightSeq.Append(attacker.DOMove(targetLungePos, lungeDuration).SetEase(Ease.OutCubic));
-        fightSeq.Join(attackerHand.DOMove(victimHead.position, lungeDuration).SetEase(Ease.OutQuad));
+        Quaternion strikeTorsoRot = torsoOriginalLocalRot * Quaternion.Euler(0f, 38f, 0f);
 
-        // 2. Point of impact
-        fightSeq.AppendInterval(0.12f);
-        fightSeq.AppendCallback(() => {
+        // Sequence construction
+        Sequence combatSeq = DOTween.Sequence();
+
+        // --- STEP 1: Wind-up / Anticipation (Slow) ---
+        combatSeq.Append(attackerTorso.DOLocalRotateQuaternion(windupTorsoRot, windupDuration).SetEase(Ease.OutQuad));
+        combatSeq.Join(attackerHand.DOLocalMove(windupHandPos, windupDuration).SetEase(Ease.OutQuad));
+
+        // --- STEP 2: The Strike (Violent / Fast) ---
+        combatSeq.Append(attackerTorso.DOLocalRotateQuaternion(strikeTorsoRot, strikeDuration).SetEase(Ease.InQuad));
+        combatSeq.Join(attackerHand.DOMove(victimHead.position, strikeDuration).SetEase(Ease.InQuad));
+
+        // --- STEP 3: Impact & Recoil (Callback) ---
+        combatSeq.AppendCallback(() =>
+        {
             // A. Camera Shake
             Camera.main.transform.DOShakePosition(0.2f, 0.4f, 15, 90f);
 
             // B. Victim Head Snap Back
-            if (victimHead != null && victimHead != victim)
-            {
-                victimHead.DOPunchRotation(new Vector3(-35f, 0f, 0f), 0.4f, 8, 1f);
-            }
+            victimHead.DOPunchRotation(new Vector3(-45f, 0f, 0f), 0.5f, 10, 1f);
 
-            // C. Push back & Rotate Victim 90 degrees (Fall Down flat on the ground)
-            victim.DOMove(victim.position + direction * pushDistance, fallDuration).SetEase(Ease.OutQuad);
-            victim.DORotate(new Vector3(90f, victim.eulerAngles.y, 0f), fallDuration).SetEase(Ease.OutBounce);
+            // C. Victim Body Stumble Back
+            victimBody.DOMove(victimBody.position + direction * pushDistance, 0.5f).SetEase(Ease.OutQuad);
         });
 
-        // 3. Return Attacker and retract the hand bone
-        fightSeq.Append(attacker.DOMove(attackerStartPos, returnDuration).SetEase(Ease.InOutQuad));
-        fightSeq.Join(attackerHand.DOLocalMove(handOriginalLocalPos, returnDuration).SetEase(Ease.InQuad));
+        // --- STEP 4: Reset to Idle ---
+        combatSeq.Append(attackerTorso.DOLocalRotateQuaternion(torsoOriginalLocalRot, resetDuration).SetEase(Ease.OutCubic));
+        combatSeq.Join(attackerHand.DOLocalMove(handOriginalLocalPos, resetDuration).SetEase(Ease.OutCubic));
+        combatSeq.Join(attackerHand.DOLocalRotateQuaternion(handOriginalLocalRot, resetDuration).SetEase(Ease.OutCubic));
 
-        // 4. Reset state
-        fightSeq.OnComplete(() => {
+        // Reset attack flag
+        combatSeq.OnComplete(() =>
+        {
             isAttacking = false;
         });
     }

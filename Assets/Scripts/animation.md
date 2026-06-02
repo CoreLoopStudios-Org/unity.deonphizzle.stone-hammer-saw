@@ -1,165 +1,44 @@
-# Procedural DOTween Combat Animation: Attacker vs. Victim
+# Custom DOTween Combat Animation Specification
 
-This document details the plan to completely remove the Mixamo animator controller animations and replace them with purely procedural DOTween movements.
+This document details the step-by-step specifications for the custom 4-stage DOTween combat sequence between the Attacker and the Victim.
 
 ---
 
-## 1. Plan to Disable Mixamo Animations
+## 1. Exposed Inspector Fields (`[SerializeField]`)
 
-To prevent the old Mixamo Animator controllers from overriding the bone transforms, we will disable them at runtime inside `Start()`:
-```csharp
-attackerAnim.enabled = false;
-victimAnim.enabled = false;
+To configure the animation parts in the Unity Editor:
+1.  **Attacker Torso/Spine (`Transform`)**: To rotate the upper body for a wind-up and forward punch twist.
+2.  **Attacker Hand/Fist (`Transform`)**: The right hand bone that delivers the punch.
+3.  **Victim Head (`Transform`)**: The target bone for the impact.
+4.  **Victim Body/Root (`Transform`)**: The root of the Victim to handle the push-back displacement.
+
+---
+
+## 2. Animation Sequence Stages
+
 ```
-This freezes both characters in their default pose, leaving their bone structures fully controllable by DOTween.
+   [CLICK]
+      │
+      ├── (Step 1: Wind-up/Anticipation) ~0.25s / Ease.OutQuad
+      │     ├── Torso rotates backward (-25 degrees around Y-axis)
+      │     └── Hand pulls back slightly
+      │
+      ├── (Step 2: The Strike) ~0.12s / Ease.InQuad
+      │     ├── Torso violently rotates forward (+38 degrees around Y-axis)
+      │     └── Hand moves instantly (DOMove) to Victim's Head position
+      │
+      ├── (Step 3: Impact & Recoil) [Callback on Hit]
+      │     ├── Camera Shake (0.2s)
+      │     ├── Victim Head snaps back via DOPunchRotation
+      │     └── Victim Body stumbles back via DOMove
+      │
+      └── (Step 4: Reset to Idle) ~0.3s / Ease.OutCubic
+            ├── Torso returns to original local rotation
+            └── Hand returns to original local position & rotation
+```
 
 ---
 
-## 2. Procedural DOTween Animation Details
+## 3. Implementation Script: `DOTweenCombatController.cs`
 
-### 2.1 Procedural Punch Action (Attacker Hand to Head)
-Instead of using a punch clip, we move the right hand bone `CC_Base_R_Hand` directly to the position of the Victim's head bone `CC_Base_Head`:
-1.  **Lunge & Strike**: The Attacker slides forward. Simultaneously, the hand bone performs a world-space move to the Victim's head:
-    `attackerHand.DOMove(victimHead.position, lungeDuration).SetEase(Ease.OutQuad);`
-2.  **Retract**: Once the hit lands, the hand bone returns to its initial local resting position:
-    `attackerHand.DOLocalMove(handOriginalLocalPos, returnDuration).SetEase(Ease.InQuad);`
-
-### 2.2 Procedural Fall Down (Victim Layout)
-Instead of playing the fall clip, we simulate a heavy impact knock-down directly on the Victim root:
-1.  **Impact Rotation**: Rotate the Victim root 90 degrees backward around the X-axis:
-    `victim.DORotate(new Vector3(90f, victim.eulerAngles.y, 0f), 0.6f).SetEase(Ease.OutBounce);`
-2.  **Impact Push**: Slide the Victim backward along the attack vector:
-    `victim.DOMove(victim.position + pushDirection * pushDistance, 0.6f).SetEase(Ease.OutQuad);`
-
----
-
-## 3. Updated Script Setup: `DOTweenCombatController.cs`
-
-```csharp
-using UnityEngine;
-using DG.Tweening;
-
-public class DOTweenCombatController : MonoBehaviour
-{
-    [Header("Fighters")]
-    public Transform attacker;
-    public Transform victim;
-
-    [Header("Settings")]
-    public float attackDistance = 1.3f;
-    public float lungeDuration = 0.18f;
-    public float returnDuration = 0.25f;
-    public float pushDistance = 1.8f;
-    public float fallDuration = 0.6f;
-
-    private Animator attackerAnim;
-    private Animator victimAnim;
-    
-    private Transform attackerHand;
-    private Transform victimHead;
-
-    private Vector3 attackerStartPos;
-    private Vector3 handOriginalLocalPos;
-    
-    private bool isAttacking = false;
-
-    private void Start()
-    {
-        if (attacker == null) attacker = this.transform;
-        if (victim == null) victim = GameObject.Find("Victim")?.transform;
-
-        if (attacker == null || victim == null)
-        {
-            Debug.LogError("[DOTweenCombat] Attacker or Victim Transform is missing!");
-            return;
-        }
-
-        // Cache initial positions
-        attackerStartPos = attacker.position;
-
-        // Cache and DISABLE animators to prevent Mixamo overrides
-        attackerAnim = attacker.GetComponent<Animator>();
-        victimAnim = victim.GetComponent<Animator>();
-        if (attackerAnim != null) attackerAnim.enabled = false;
-        if (victimAnim != null) victimAnim.enabled = false;
-
-        // Recursively find bone references
-        attackerHand = FindChildRecursive(attacker, "CC_Base_R_Hand");
-        victimHead = FindChildRecursive(victim, "CC_Base_Head");
-
-        if (attackerHand != null)
-        {
-            handOriginalLocalPos = attackerHand.localPosition;
-        }
-        else
-        {
-            Debug.LogError("[DOTweenCombat] CC_Base_R_Hand bone not found under Attacker!");
-        }
-
-        if (victimHead == null)
-        {
-            Debug.LogWarning("[DOTweenCombat] CC_Base_Head bone not found under Victim. Defaulting to Victim root.");
-            victimHead = victim;
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(0) && !isAttacking)
-        {
-            PlayCombatSequence();
-        }
-    }
-
-    private void PlayCombatSequence()
-    {
-        if (attackerHand == null || victimHead == null) return;
-        isAttacking = true;
-
-        Vector3 direction = (victim.position - attacker.position).normalized;
-        Vector3 targetLungePos = victim.position - (direction * attackDistance);
-
-        // Sequence Builder
-        Sequence fightSeq = DOTween.Sequence();
-
-        // 1. Lunge forward & stretch the hand bone straight to the head
-        fightSeq.Append(attacker.DOMove(targetLungePos, lungeDuration).SetEase(Ease.OutCubic));
-        fightSeq.Join(attackerHand.DOMove(victimHead.position, lungeDuration).SetEase(Ease.OutQuad));
-
-        // 2. Point of impact
-        fightSeq.AppendCallback(() => {
-            // A. Camera Shake
-            Camera.main.transform.DOShakePosition(0.2f, 0.4f, 15, 90f);
-
-            // B. Victim Head Snap Back
-            if (victimHead != null && victimHead != victim)
-            {
-                victimHead.DOPunchRotation(new Vector3(-35f, 0f, 0f), 0.4f, 8, 1f);
-            }
-
-            // C. Push back & Rotate Victim 90 degrees (Fall Down flat on the ground)
-            victim.DOMove(victim.position + direction * pushDistance, fallDuration).SetEase(Ease.OutQuad);
-            victim.DORotate(new Vector3(90f, victim.eulerAngles.y, 0f), fallDuration).SetEase(Ease.OutBounce);
-        });
-
-        // 3. Return Attacker and retract the hand bone
-        fightSeq.Append(attacker.DOMove(attackerStartPos, returnDuration).SetEase(Ease.InOutQuad));
-        fightSeq.Join(attackerHand.DOLocalMove(handOriginalLocalPos, returnDuration).SetEase(Ease.InQuad));
-
-        // 4. Reset state
-        fightSeq.OnComplete(() => {
-            isAttacking = false;
-        });
-    }
-
-    private Transform FindChildRecursive(Transform parent, string childName)
-    {
-        if (parent.name == childName) return parent;
-        foreach (Transform child in parent)
-        {
-            Transform result = FindChildRecursive(child, childName);
-            if (result != null) return result;
-        }
-        return null;
-    }
-}
+Below is the fully refactored script adhering to safety best practices (caching original local offsets, checking for null references, and automatic fallback bone searching if fields are left unassigned).
