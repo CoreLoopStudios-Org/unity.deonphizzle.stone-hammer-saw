@@ -4011,6 +4011,7 @@ GameObject:
   - component: {fileID: 1337751762615521123}
   - component: {fileID: 5709256303530233765}
   - component: {fileID: 5709256303530233764}
+  - component: {fileID: 5709256303530233766}
   m_Layer: 0
   m_Name: Pangopal_01
   m_TagString: Untagged
@@ -4060,6 +4061,37 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &5709256303530233766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5709256303530233763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cccca8955ca16346ad256bd07d6cd44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProceduralHumanoidAnimator
+  hips: {fileID: 0}
+  spine: {fileID: 0}
+  leftUpperArm: {fileID: 0}
+  rightUpperArm: {fileID: 0}
+  leftForearm: {fileID: 0}
+  rightForearm: {fileID: 0}
+  leftThigh: {fileID: 0}
+  rightThigh: {fileID: 0}
+  leftCalf: {fileID: 0}
+  rightCalf: {fileID: 0}
+  breathingSpeed: 2
+  breathingAngle: 2
+  idleArmAngle: 75
+  gaitSpeedMultiplier: 3
+  maxLegSwing: 25
+  maxKneeBend: 35
+  maxArmSwing: 35
+  bobHeight: 0.08
+  armSwingOffset: 10
 --- !u!4 &5864381054647701447
 Transform:
   m_ObjectHideFlags: 0

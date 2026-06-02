@@ -125,6 +125,13 @@ public class ThirdPersonSetupHelper
             tpController = playerRoot.AddComponent<ThirdPersonCharacterController>();
         }
 
+        // 7.2 Attach ProceduralHumanoidAnimator to handle bone motions procedurally
+        ProceduralHumanoidAnimator proceduralAnim = playerRoot.GetComponent<ProceduralHumanoidAnimator>();
+        if (proceduralAnim == null)
+        {
+            proceduralAnim = playerRoot.AddComponent<ProceduralHumanoidAnimator>();
+        }
+
         // 7.5 Ensure environment colliders are configured so character doesn't fall through
         GameObject backgroundObj = GameObject.Find("background");
         if (backgroundObj != null)
