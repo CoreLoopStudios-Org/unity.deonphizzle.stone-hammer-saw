@@ -1,41 +1,3 @@
-# Procedural DOTween Combat Animation: Attacker vs. Victim
-
-This document details the plan to completely remove the Mixamo animator controller animations and replace them with purely procedural DOTween movements.
-
----
-
-## 1. Plan to Disable Mixamo Animations
-
-To prevent the old Mixamo Animator controllers from overriding the bone transforms, we will disable them at runtime inside `Start()`:
-```csharp
-attackerAnim.enabled = false;
-victimAnim.enabled = false;
-```
-This freezes both characters in their default pose, leaving their bone structures fully controllable by DOTween.
-
----
-
-## 2. Procedural DOTween Animation Details
-
-### 2.1 Procedural Punch Action (Attacker Hand to Head)
-Instead of using a punch clip, we move the right hand bone `CC_Base_R_Hand` directly to the position of the Victim's head bone `CC_Base_Head`:
-1.  **Lunge & Strike**: The Attacker slides forward. Simultaneously, the hand bone performs a world-space move to the Victim's head:
-    `attackerHand.DOMove(victimHead.position, lungeDuration).SetEase(Ease.OutQuad);`
-2.  **Retract**: Once the hit lands, the hand bone returns to its initial local resting position:
-    `attackerHand.DOLocalMove(handOriginalLocalPos, returnDuration).SetEase(Ease.InQuad);`
-
-### 2.2 Procedural Fall Down (Victim Layout)
-Instead of playing the fall clip, we simulate a heavy impact knock-down directly on the Victim root:
-1.  **Impact Rotation**: Rotate the Victim root 90 degrees backward around the X-axis:
-    `victim.DORotate(new Vector3(90f, victim.eulerAngles.y, 0f), 0.6f).SetEase(Ease.OutBounce);`
-2.  **Impact Push**: Slide the Victim backward along the attack vector:
-    `victim.DOMove(victim.position + pushDirection * pushDistance, 0.6f).SetEase(Ease.OutQuad);`
-
----
-
-## 3. Updated Script Setup: `DOTweenCombatController.cs`
-
-```csharp
 using UnityEngine;
 using DG.Tweening;
 
@@ -127,6 +89,7 @@ public class DOTweenCombatController : MonoBehaviour
         fightSeq.Join(attackerHand.DOMove(victimHead.position, lungeDuration).SetEase(Ease.OutQuad));
 
         // 2. Point of impact
+        fightSeq.AppendInterval(0.12f);
         fightSeq.AppendCallback(() => {
             // A. Camera Shake
             Camera.main.transform.DOShakePosition(0.2f, 0.4f, 15, 90f);
