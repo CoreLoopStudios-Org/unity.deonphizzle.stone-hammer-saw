@@ -4,16 +4,25 @@ public class HitDetector : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        // যার সাথে ধাক্কা লাগবে, তার গায়ে 'Victim' ট্যাগ আছে কি না চেক করবে
-        if (other.CompareTag("Victim"))
+        // Debug 1: Check if the physics engine registers ANY trigger enter event
+        Debug.Log($"[HitDetector] Trigger entered by: {other.gameObject.name} (Tag: {other.gameObject.tag})");
+
+        // Check if the hit object or its parent is tagged 'Victim'
+        if (other.CompareTag("Victim") || (other.transform.parent != null && other.transform.parent.CompareTag("Victim")))
         {
-            // ভিকটিমের গায়ের Animator কম্পোনেন্টটি খুঁজে বের করবে
-            Animator victimAnim = other.GetComponent<Animator>();
+            Debug.Log("[HitDetector] Victim tag check passed! Resolving Animator...");
+
+            // Use GetComponentInParent to find the Animator on the root of the character
+            Animator victimAnim = other.GetComponentInParent<Animator>();
             
             if (victimAnim != null)
             {
-                // ভিকটিমকে পড়ে যাওয়ার ট্রিগারটি ফায়ার করবে
+                Debug.Log("[HitDetector] Animator found! Firing 'FallDown' trigger.");
                 victimAnim.SetTrigger("FallDown");
+            }
+            else
+            {
+                Debug.LogError("[HitDetector] ERROR: No Animator component found on the Victim or its parents!");
             }
         }
     }
