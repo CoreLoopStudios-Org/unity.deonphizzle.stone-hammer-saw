@@ -2201,7 +2201,7 @@ Transform:
   m_GameObject: {fileID: 919132147844891235}
   serializedVersion: 2
   m_LocalRotation: {x: 0.013745321, y: -0.27455458, z: 0.0012476164, w: 0.9614725}
-  m_LocalPosition: {x: 0.24, y: -0.04, z: -60.694}
+  m_LocalPosition: {x: 0.24, y: 0.28, z: -60.694}
   m_LocalScale: {x: 1.769, y: 1.769, z: 1.769}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2820,13 +2820,41 @@ GameObject:
   - component: {fileID: 5866666020999360673}
   - component: {fileID: 5866666020999360674}
   - component: {fileID: 5866666020999360675}
+  - component: {fileID: 919132148991586402}
   m_Layer: 0
   m_Name: Victim
-  m_TagString: Untagged
+  m_TagString: Victim
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!54 &919132148991586402
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132148991586401}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &927598970997111942
 GameObject:
   m_ObjectHideFlags: 0
@@ -3858,7 +3886,7 @@ Transform:
   m_GameObject: {fileID: 5318055786467241691}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.228, y: 0.426, z: -0.155}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6443,7 +6471,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
+  m_AnimatePhysics: 1
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -6477,7 +6505,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
+  m_AnimatePhysics: 1
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -6873,7 +6901,7 @@ Transform:
   m_GameObject: {fileID: 1702513487569752126}
   serializedVersion: 2
   m_LocalRotation: {x: -0.024020415, y: 0.033048056, z: -0.7064473, w: 0.70658547}
-  m_LocalPosition: {x: 0.038982023, y: 0.13612095, z: -0.0003159738}
+  m_LocalPosition: {x: 0.088, y: 0.136, z: -0.031}
   m_LocalScale: {x: 1.0000002, y: 1.0000001, z: 1.0000004}
   m_ConstrainProportionsScale: 0
   m_Children:
