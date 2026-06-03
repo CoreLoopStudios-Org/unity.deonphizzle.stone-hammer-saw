@@ -16,6 +16,10 @@ public class ThirdPersonCharacterController : MonoBehaviour
     public float cameraHeight = 1.5f;       
     public float minPitch = -20f;           
     public float maxPitch = 60f;            
+    
+    [Header("Camera Manual Control")]
+    [Tooltip("Inspector থেকে ক্যামেরার X Rotation (Pitch) ম্যানুয়ালি কন্ট্রোল করার জন্য")]
+    public float cameraRotationX_Offset = 0f; // নতুন ভ্যারিয়েবল
 
     private CharacterController controller;
     private Animator animator;
@@ -114,7 +118,10 @@ public class ThirdPersonCharacterController : MonoBehaviour
         }
 
         Vector3 targetPosition = transform.position + Vector3.up * cameraHeight;
-        Quaternion camRotation = Quaternion.Euler(pitch, yaw, 0f);
+        
+        // এখানে X Offset যুক্ত করা হয়েছে যাতে Inspector থেকে মডিফাই করা যায়
+        Quaternion camRotation = Quaternion.Euler(pitch + cameraRotationX_Offset, yaw, 0f); 
+        
         Vector3 camPosition = targetPosition - (camRotation * Vector3.forward * cameraDistance);
 
         cameraTransform.position = camPosition;

@@ -45,8 +45,15 @@ public class ThirdPersonCameraController : MonoBehaviour
     [Header("Smoothing")]
     public float smoothTime = 0.12f;
 
-    private float x = 0.0f;
-    private float y = 0.0f;
+    [Header("Current Rotation Angles")]
+    [Tooltip("Horizontal rotation angle (yaw) in degrees.")]
+    public float x = 0.0f;
+    [Tooltip("Vertical rotation angle (pitch/tilt) in degrees.")]
+    public float y = 0.0f;
+
+    [Header("Initial Angle Override")]
+    [Tooltip("If true, the camera will start at the custom X and Y angles specified above instead of copying the scene transform's rotation.")]
+    public bool overrideStartRotation = false;
 
     private float currentX = 0.0f;
     private float currentY = 0.0f;
@@ -55,9 +62,12 @@ public class ThirdPersonCameraController : MonoBehaviour
 
     private void Start()
     {
-        Vector3 angles = transform.eulerAngles;
-        x = angles.y;
-        y = angles.x;
+        if (!overrideStartRotation)
+        {
+            Vector3 angles = transform.eulerAngles;
+            x = angles.y;
+            y = angles.x;
+        }
 
         currentX = x;
         currentY = y;
