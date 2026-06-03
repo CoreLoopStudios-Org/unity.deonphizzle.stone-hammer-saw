@@ -11,15 +11,14 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
     [Header("Camera Reference & Settings")]
     public Transform cameraTransform;
-    public float touchSensitivity = 1.5f; // মোবাইলে টাচ ঘোরানোর স্পিড
+    public float touchSensitivity = 0.2f; 
     public float cameraDistance = 4.0f;     
     public float cameraHeight = 1.5f;       
     public float minPitch = -20f;           
     public float maxPitch = 60f;            
     
     [Header("Camera Manual Control")]
-    [Tooltip("Inspector থেকে ক্যামেরার X Rotation (Pitch) ম্যানুয়ালি কন্ট্রোল করার জন্য")]
-    public float cameraRotationX_Offset = 0f; // নতুন ভ্যারিয়েবল
+    public float cameraRotationX_Offset = 0f;
 
     private CharacterController controller;
     private Animator animator;
@@ -27,6 +26,9 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
     private float pitch = 0f;
     private float yaw = 0f;
+
+    private Vector2 lastTouchPosition;
+    private bool isDraggingCamera = false;
 
     private void Start()
     {
@@ -38,22 +40,26 @@ public class ThirdPersonCharacterController : MonoBehaviour
             cameraTransform = Camera.main.transform;
         }
 
-        // পিসির কার্সর লক রিমুভ করা হয়েছে, কারণ এটি মোবাইল গেম
         yaw = transform.eulerAngles.y; 
     }
 
     private void Update()
     {
-        // আমাদের বানানো নতুন জয়স্টিক থেকে ইনপুট নেওয়া
+        // ১. ಮೊবাইল জয়স্টিক থেকে ইনপুট নেওয়া
         float horizontal = SimpleMobileJoystick.InputDirection.x;
         float vertical = SimpleMobileJoystick.InputDirection.y;
-        
-        // জয়স্টিক অর্ধেকের বেশি টানলে ক্যারেক্টার দৌড়াবে
         bool isRunning = SimpleMobileJoystick.InputDirection.magnitude > 0.7f; 
+
+        // ২. পিসি কীবোর্ড (WASD) ফলব্যাক (যদি জয়স্টিক ব্যবহার না হয়)
+        if (horizontal == 0 && vertical == 0)
+        {
+            horizontal = Input.GetAxis("Horizontal");
+            vertical = Input.GetAxis("Vertical");
+            isRunning = Input.GetKey(KeyCode.LeftShift);
+        }
 
         Vector3 inputDir = new Vector3(horizontal, 0f, vertical);
         float currentSpeed = isRunning ? runSpeed : walkSpeed;
-
         Vector3 moveDirection = Vector3.zero;
 
         if (inputDir.magnitude > 0.05f && cameraTransform != null)
@@ -83,18 +89,76 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
         Vector3 velocity = moveDirection * (inputDir.magnitude * currentSpeed);
         velocity.y = verticalVelocity;
-
         controller.Move(velocity * Time.deltaTime);
 
         if (animator != null)
         {
-            float speedParam = 0f;
-            if (inputDir.magnitude > 0.05f)
-            {
-                speedParam = isRunning ? 1f : 0.5f;
-            }
-            
+            float speedParam = inputDir.magnitude > 0.05f ? (isRunning ? 1f : 0.5f) : 0f;
             animator.SetFloat("Speed", speedParam, 0.15f, Time.deltaTime);
+        }
+
+        HandleCameraInput();
+    }
+
+    private void HandleCameraInput()
+    {
+        Vector2 currentTouchPos = Vector2.zero;
+        bool inputDetected = false;
+
+        if (Input.touchCount > 0)
+        {
+            foreach (Touch touch in Input.touches)
+            {
+                if (touch.position.x > Screen.width / 2.5f)
+                {
+                    if (touch.phase == TouchPhase.Began)
+                    {
+                        lastTouchPosition = touch.position;
+                        isDraggingCamera = true;
+                    }
+                    else if (touch.phase == TouchPhase.Moved && isDraggingCamera)
+                    {
+                        currentTouchPos = touch.position;
+                        inputDetected = true;
+                    }
+                    else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+                    {
+                        isDraggingCamera = false;
+                    }
+                    break; 
+                }
+            }
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            if (Input.mousePosition.x > Screen.width / 2.5f)
+            {
+                if (Input.GetMouseButtonDown(0))
+                {
+                    lastTouchPosition = Input.mousePosition;
+                    isDraggingCamera = true;
+                }
+                else if (isDraggingCamera)
+                {
+                    currentTouchPos = Input.mousePosition;
+                    inputDetected = true;
+                }
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            isDraggingCamera = false;
+        }
+
+        if (inputDetected && isDraggingCamera)
+        {
+            Vector2 delta = currentTouchPos - lastTouchPosition;
+
+            yaw += delta.x * touchSensitivity;
+            pitch -= delta.y * touchSensitivity; 
+            pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
+
+            lastTouchPosition = currentTouchPos; 
         }
     }
     
@@ -102,26 +166,8 @@ public class ThirdPersonCharacterController : MonoBehaviour
     {
         if (cameraTransform == null) return;
 
-        // স্ক্রিনের ডানদিকে টাচ বা ক্লিক করে ঘুরালে ক্যামেরা ঘুরবে
-        if (Input.GetMouseButton(0))
-        {
-            // স্ক্রিনের বামদিকে (যেখানে জয়স্টিক আছে) টাচ করলে ক্যামেরা ঘুরবে না
-            if (Input.mousePosition.x > Screen.width / 2.5f)
-            {
-                float mouseX = Input.GetAxis("Mouse X") * touchSensitivity;
-                float mouseY = Input.GetAxis("Mouse Y") * touchSensitivity;
-
-                yaw += mouseX;
-                pitch -= mouseY;
-                pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
-            }
-        }
-
         Vector3 targetPosition = transform.position + Vector3.up * cameraHeight;
-        
-        // এখানে X Offset যুক্ত করা হয়েছে যাতে Inspector থেকে মডিফাই করা যায়
         Quaternion camRotation = Quaternion.Euler(pitch + cameraRotationX_Offset, yaw, 0f); 
-        
         Vector3 camPosition = targetPosition - (camRotation * Vector3.forward * cameraDistance);
 
         cameraTransform.position = camPosition;
