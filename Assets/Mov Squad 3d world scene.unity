@@ -1515,6 +1515,8 @@ MonoBehaviour:
   zoomSpeed: 2
   yMinLimit: -20
   yMaxLimit: 60
+  autoAlignSpeed: 3
+  autoAlignDelay: 1.5
   smoothTime: 0.12
 --- !u!1001 &1054935180
 PrefabInstance:
@@ -2243,6 +2245,7 @@ GameObject:
   - component: {fileID: 1683006785}
   - component: {fileID: 1683006787}
   - component: {fileID: 1683006786}
+  - component: {fileID: 1683006788}
   m_Layer: 5
   m_Name: Joystick
   m_TagString: Untagged
@@ -2308,6 +2311,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1683006784}
   m_CullTransparentMesh: 1
+--- !u!114 &1683006788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1683006784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 985c0e9e94687704783eccdbd8c006b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SimpleMobileJoystick
+  joystickKnob: {fileID: 403007461}
 --- !u!1 &2116198337
 GameObject:
   m_ObjectHideFlags: 0
@@ -4263,7 +4279,7 @@ MonoBehaviour:
   rotationSpeed: 10
   gravity: 9.81
   cameraTransform: {fileID: 961739753}
-  mouseSensitivity: 2
+  touchSensitivity: 1.5
   cameraDistance: 4
   cameraHeight: 1.5
   minPitch: -20

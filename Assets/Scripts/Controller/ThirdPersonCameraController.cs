@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -32,6 +33,15 @@ public class ThirdPersonCameraController : MonoBehaviour
     [Tooltip("Highest angle the camera can tilt vertically (degrees).")]
     public float yMaxLimit = 60f;
 
+    [Header("Follow Settings")]
+    [Tooltip("How fast the camera returns behind the player's back.")]
+    public float autoAlignSpeed = 3f;
+    [Tooltip("Seconds of inactivity before auto-aligning behind the player.")]
+    public float autoAlignDelay = 1.5f;
+
+    private float lastDragTime = 0f;
+    private bool isDragging = false;
+
     [Header("Smoothing")]
     public float smoothTime = 0.12f;
 
@@ -61,33 +71,81 @@ public class ThirdPersonCameraController : MonoBehaviour
     {
         if (target == null) return;
 
-        // Get mouse movement inputs
-        float mouseDeltaX = 0f;
-        float mouseDeltaY = 0f;
+        // 1. Detect Screen Drag (Touch or Mouse drag) for 360 Camera Rotation
+        float deltaX = 0f;
+        float deltaY = 0f;
         float scrollInput = 0f;
+        bool inputDetected = false;
 
+        // Mouse inputs for PC / Editor testing
+        if (Input.GetMouseButton(0))
+        {
+            // Verify we aren't clicking on a UI element (like the virtual joystick)
+            if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
+            {
+                deltaX = Input.GetAxis("Mouse X") * xSpeed * 0.02f;
+                deltaY = Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
+                inputDetected = true;
+            }
+        }
+        // Mobile touch inputs
+        else if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == UnityEngine.TouchPhase.Moved)
+            {
+                // Verify touch is not over a UI element (like the joystick)
+                if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    deltaX = touch.deltaPosition.x * xSpeed * 0.005f;
+                    deltaY = touch.deltaPosition.y * ySpeed * 0.005f;
+                    inputDetected = true;
+                }
+            }
+        }
+
+        // Scroll zoom inputs
 #if ENABLE_INPUT_SYSTEM
         if (Mouse.current != null)
         {
-            Vector2 delta = Mouse.current.delta.ReadValue();
-            mouseDeltaX = delta.x * 0.05f; // Scale down input delta for new input system
-            mouseDeltaY = delta.y * 0.05f;
             scrollInput = Mouse.current.scroll.ReadValue().y * 0.001f;
         }
         else
         {
-            mouseDeltaX = Input.GetAxis("Mouse X");
-            mouseDeltaY = Input.GetAxis("Mouse Y");
             scrollInput = Input.GetAxis("Mouse ScrollWheel");
         }
 #else
-        mouseDeltaX = Input.GetAxis("Mouse X");
-        mouseDeltaY = Input.GetAxis("Mouse Y");
         scrollInput = Input.GetAxis("Mouse ScrollWheel");
 #endif
 
-        x += mouseDeltaX * xSpeed * 0.02f;
-        y -= mouseDeltaY * ySpeed * 0.02f;
+        // Apply manual orbital rotation if dragging
+        if (inputDetected)
+        {
+            x += deltaX;
+            y -= deltaY;
+            lastDragTime = Time.time;
+            isDragging = true;
+        }
+        else
+        {
+            isDragging = false;
+        }
+
+        // 2. Smoothly Auto-Align Camera behind player during locomotion
+        if (!isDragging && (Time.time - lastDragTime > autoAlignDelay))
+        {
+            // Retrieve target's CharacterController to verify movement
+            CharacterController targetController = target.GetComponent<CharacterController>();
+            Vector3 velocity = targetController != null ? targetController.velocity : Vector3.zero;
+            
+            // Check if player is moving on XZ plane
+            if (new Vector3(velocity.x, 0f, velocity.z).magnitude > 0.1f)
+            {
+                // Align camera rotation angle (x) with player's forward direction
+                float targetAngle = target.eulerAngles.y;
+                x = Mathf.LerpAngle(x, targetAngle, Time.deltaTime * autoAlignSpeed);
+            }
+        }
 
         // Clamp vertical angle
         y = ClampAngle(y, yMinLimit, yMaxLimit);
@@ -99,7 +157,7 @@ public class ThirdPersonCameraController : MonoBehaviour
         // Convert angles to rotation
         Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
 
-        // Handle distance zoom using mouse scroll wheel
+        // Handle distance zoom using mouse scroll wheel / pinch zoom
         distance = Mathf.Clamp(distance - scrollInput * zoomSpeed, minDistance, maxDistance);
 
         // Calculate target pivot position

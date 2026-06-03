@@ -1,0 +1,7 @@
+﻿
+================ INSPECTING CANVAS: Mob Squad 3d world scene.unity ================
+Canvas GameObject ID: 1125946987, RectTransform ID: 1125946991
+|- Canvas (GO_ID: 1125946987, Trans_ID: 1125946991)
+  |- JoystickTouchZone (GO_ID: 888880001, Trans_ID: 888880002)
+    |- JoystickBgCircle (GO_ID: 888880010, Trans_ID: 888880011)
+      |- KnobHandle (GO_ID: 888880006, Trans_ID: 888880007)
