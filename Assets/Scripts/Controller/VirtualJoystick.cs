@@ -42,11 +42,14 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler,
     {
         Vector2 position = Vector2.zero;
 
+        Canvas canvas = touchZone.GetComponentInParent<Canvas>();
+        Camera cam = (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : eventData.pressEventCamera;
+
         // Convert screen point to touchZone local point
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             touchZone, 
             eventData.position, 
-            eventData.pressEventCamera, 
+            cam, 
             out position))
         {
             // Move the visual background circle (container) to the click position
@@ -70,11 +73,14 @@ public class VirtualJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler,
     {
         Vector2 position = Vector2.zero;
 
+        Canvas canvas = container.GetComponentInParent<Canvas>();
+        Camera cam = (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : eventData.pressEventCamera;
+
         // Calculate handle position relative to the visual container (which is the new center)
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             container, 
             eventData.position, 
-            eventData.pressEventCamera, 
+            cam, 
             out position))
         {
             float width = container.sizeDelta.x;

@@ -24,10 +24,21 @@ public class SimpleMobileJoystick : MonoBehaviour, IDragHandler, IPointerDownHan
     public void OnDrag(PointerEventData eventData)
     {
         Vector2 position;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(joystickBackground, eventData.position, eventData.pressEventCamera, out position);
+        // Screen Space - Overlay Canvas values require a null camera parameter
+        Canvas canvas = joystickBackground.GetComponentInParent<Canvas>();
+        Camera cam = (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : eventData.pressEventCamera;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(joystickBackground, eventData.position, cam, out position);
         
+        // Calculate the touch position relative to the center of the background instead of its pivot
+        Vector2 pivotOffset = new Vector2(
+            (0.5f - joystickBackground.pivot.x) * joystickBackground.rect.width,
+            (0.5f - joystickBackground.pivot.y) * joystickBackground.rect.height
+        );
+        Vector2 localCenterPosition = position - pivotOffset;
+
         // tip বা নবটিকে ব্যাকগ্রাউন্ডের বাইরে যেতে না দেওয়া
-        Vector2 clampedPosition = Vector2.ClampMagnitude(position, maxRadius);
+        Vector2 clampedPosition = Vector2.ClampMagnitude(localCenterPosition, maxRadius);
         joystickKnob.anchoredPosition = clampedPosition;
 
         // আউটপুট সিগন্যাল (-1 থেকে 1) প্লেয়ারের কাছে পাঠানো
