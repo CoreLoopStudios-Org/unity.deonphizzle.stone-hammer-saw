@@ -8,7 +8,7 @@ public class ThirdPersonCharacterController : MonoBehaviour
     public float runSpeed = 6.0f;
     public float rotationSpeed = 10.0f;
     public float gravity = 9.81f;
-    public float jumpHeight = 1.2f; // জাম্প কতটুকু উঁচুতে হবে
+    public float jumpHeight = 1.2f; 
 
     [Header("Camera Reference & Settings")]
     public Transform cameraTransform;
@@ -31,7 +31,6 @@ public class ThirdPersonCharacterController : MonoBehaviour
     private Vector2 lastTouchPosition;
     private bool isDraggingCamera = false;
     
-    // UI বাটন থেকে সিগন্যাল রিসিভ করার ভ্যারিয়েবল
     private bool jumpPressed = false;
 
     private void Start()
@@ -48,7 +47,6 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
     private void Update()
     {
-        // মুভমেন্ট ইনপুট
         float horizontal = SimpleMobileJoystick.InputDirection.x;
         float vertical = SimpleMobileJoystick.InputDirection.y;
         bool isRunning = SimpleMobileJoystick.InputDirection.magnitude > 0.7f; 
@@ -80,29 +78,26 @@ public class ThirdPersonCharacterController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
-        // --- Jump এবং Gravity ফিজিক্স ---
         if (controller.isGrounded)
         {
             if (verticalVelocity < 0.0f)
             {
-                verticalVelocity = -2f; // মাটিতে থাকলে ফোর্স ব্যালেন্স করা
+                verticalVelocity = -2f; 
             }
 
-            // যদি UI বাটন চাপ দেওয়া হয় অথবা কীবোর্ডের Space চাপ দেওয়া হয়
             if (jumpPressed || Input.GetKeyDown(KeyCode.Space))
             {
-                verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity); // জাম্পের ফর্মুলা
-                jumpPressed = false; // জাম্প করার পর সিগন্যাল অফ করে দেওয়া
+                verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity); 
+                jumpPressed = false; 
                 
                 if (animator != null)
                 {
-                    animator.SetTrigger("Jump"); // অ্যানিমেটরে জাম্প ট্রিগার করা
+                    animator.SetTrigger("Jump"); 
                 }
             }
         }
         else
         {
-            // বাতাসে থাকলে অভিকর্ষজ ত্বরণ (Gravity) কাজ করবে
             verticalVelocity -= gravity * Time.deltaTime;
         }
 
@@ -110,17 +105,21 @@ public class ThirdPersonCharacterController : MonoBehaviour
         velocity.y = verticalVelocity;
         controller.Move(velocity * Time.deltaTime);
 
-        // অ্যানিমেশন স্পিড
         if (animator != null)
         {
             float speedParam = inputDir.magnitude > 0.05f ? (isRunning ? 1f : 0.5f) : 0f;
             animator.SetFloat("Speed", speedParam, 0.15f, Time.deltaTime);
+            
+            // পিসিতে টেস্ট করার জন্য মাউসের লেফট ক্লিক চাপলেও অ্যাটাক করবে
+            if (Input.GetMouseButtonDown(0) && Input.mousePosition.x < Screen.width / 2.5f)
+            {
+               // OnAttackButtonClicked();
+            }
         }
 
         HandleCameraInput();
     }
 
-    // এই ফাংশনটি UI Button থেকে কল করা হবে
     public void OnJumpButtonClicked()
     {
         if (controller.isGrounded)
@@ -129,7 +128,15 @@ public class ThirdPersonCharacterController : MonoBehaviour
         }
     }
 
-    // --- ক্যামেরা কোড (আগের মতোই আছে) ---
+    // --- নতুন ফাংশন: Attack বাটন থেকে কল করার জন্য ---
+    public void OnAttackButtonClicked()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("Attack"); 
+        }
+    }
+
     private void HandleCameraInput()
     {
         Vector2 currentTouchPos = Vector2.zero;
