@@ -1,91 +1,65 @@
-# Pangupops Character Movement & Diagnostic Analysis
+# Pangupops Character Locomotion & System Diagnosis
 
-This document provides a detailed breakdown of the movement systems, camera relationships, animator integrations, and a technical diagnostic analysis of the left leg distortion bug in run mode.
+This document provides a comprehensive analysis of the movement system, camera orbit configuration, animator blending thresholds, and the resolution of rig-breaking and leg distortion bugs on the **Pangupops** character (GameObject: `Pangopal_01`) in the 3D world scene.
 
 ---
 
 ## 1. Character Architecture & Components
-The player character GameObject `Pangopal_01` (representing the Pangolin model `pangopan`) is configured in the scene with the following movement and animation components:
-*   **`CharacterController`:** Controls collision capsule bounds and motion velocity.
-*   **`Animator`:** Plays keyframed locomotion animations via the [PangolinThirdPerson.controller](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Animation/PangolinThirdPerson.controller) blend tree.
-*   **`ThirdPersonCharacterController`:** A custom C# script processing WASD/Joystick inputs and calculating movement relative to camera look perspective.
-*   **`ProceduralHumanoidAnimator`:** A custom procedural script designed to mathematically calculate bone rotations for breathing, spine sway, and running.
+The player character GameObject `Pangopal_01` (rendering the pangolin model `pangopan`) utilizes a standard Mecanim humanoid setup:
+*   **`CharacterController`:** Handles collision bounds and physics movement steps.
+*   **`Animator`:** Blends locomotion animations via [PangolinThirdPerson.controller](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Animation/PangolinThirdPerson.controller).
+*   **`ThirdPersonCharacterController`:** Custom C# input handler mapping WASD inputs relative to the camera perspective.
+*   **`ProceduralHumanoidAnimator` (DISABLED/RESOLVED):** A legacy component that was conflicting with keyframed FBX animations.
 
 ---
 
-## 2. Character Movement System
+## 2. Character Locomotion System
 
-The character movement is driven by the [ThirdPersonCharacterController.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/ThirdPersonCharacterController.cs) script.
-
-### 2.1 Configuration Parameters
-*   **Walk Speed:** `3.0` units/sec (active during basic keyboard direction presses).
-*   **Run Speed:** `6.0` units/sec (active when holding down the sprint key).
+Locomotion is processed via [ThirdPersonCharacterController.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/ThirdPersonCharacterController.cs) using the following parameters:
+*   **Walk Speed:** `3.0` units/sec (active during standard WASD presses).
+*   **Run Speed:** `6.0` units/sec (active when holding `Left Shift` + WASD).
 *   **Rotation Speed:** `10.0` (speed of smooth interpolation facing the movement direction).
-*   **Gravity:** `9.81` units/sec² (applied downward when in the air).
+*   **Gravity:** `9.81` units/sec² (applied when in the air).
 
-### 2.2 Input Binding & Resolution
-The script supports both legacy and modern Unity Input Systems:
-*   **WASD & Arrow Keys:** Controls 2D direction axis (`Horizontal` and `Vertical`).
-*   **Left Shift:** Toggles the running (sprinting) state.
-
-### 2.3 Camera Perspective Alignment
-Rather than moving in absolute world coordinates, movement direction is resolved relative to the camera's current perspective:
-1.  Obtains the forward and right vectors of the referenced `cameraTransform` (defaulting to the main camera if null).
-2.  Projects these vectors onto the horizontal XZ plane (`y = 0.0f`) and normalizes them.
-3.  Calculates the target movement vector relative to the camera view:
+### 2.1 Camera-Relative Motion
+Movement directions are calculated relative to the camera’s perspective:
+1.  Project the main camera's forward and right vectors onto the horizontal XZ plane (`y = 0`).
+2.  Normalize these vectors.
+3.  Evaluate the player's 2D input axes to calculate a relative target vector:
     ```csharp
-    Vector3 camForward = cameraTransform.forward;
-    camForward.y = 0f;
-    camForward.Normalize();
-
-    Vector3 camRight = cameraTransform.right;
-    camRight.y = 0f;
-    camRight.Normalize();
-
     Vector3 moveDirection = (camForward * inputDir.z + camRight * inputDir.x).normalized;
     ```
-4.  Smoothly rotates (`Quaternion.Slerp`) the character to face the direction of travel.
+4.  Interpolate (`Quaternion.Slerp`) the character's rotation to face this direction smoothly.
+5.  Call `CharacterController.Move()` to apply the combined translation and gravity step.
+
+### 2.2 Locomotion Blending & Thresholds (FIXED)
+Locomotion transitions smoothly between animations using a float parameter `"Speed"` in a 1D Blend Tree:
+*   **Blend Tree Thresholds:**
+    *   **Idle:** `0.0` (maps to `Pangu Idle.fbx`)
+    *   **Walk:** `0.5` (maps to `Pangu Walking.fbx`)
+    *   **Run:** `1.0` (maps to `Pangu Fast Run.fbx`)
+*   **Script Configuration:** The controller writes the following parameter values based on movement status:
+    *   **Idle:** `0.0f`
+    *   **Walk:** `0.5f` (smoothly blends into walking state)
+    *   **Run (Shift):** `1.0f` (sprints)
+*   **Smooth Dampening:** A dampening value of `0.15s` is applied to prevent animation popping.
 
 ---
 
-## 3. Left Leg Run Distortion: Root Cause Analysis
+## 3. Bug Diagnosis & Resolutions (Completed)
 
-When the character runs, there is visible distortion or glitches on the left leg. This behavior is caused by two overlapping technical issues:
+During testing, two major animation bugs were identified and resolved in the scene:
 
-### 3.1 Cause A: The Script-Animator Conflict (Critical)
-The character GameObject `Pangopal_01` has **both** keyframed and procedural animation systems running simultaneously:
-1.  **Keyframed System:** The `Animator` plays the clip [Pangu Fast Run.fbx](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Animation/Movement%20Animation/Pangu%20Fast%20Run.fbx) using Humanoid retargeting.
-2.  **Procedural System:** The [ProceduralHumanoidAnimator.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/ProceduralHumanoidAnimator.cs) script runs in `LateUpdate()`, completely overwriting the joint rotations of the hips, spine, arms, thighs, and calves with simple trigonometric functions.
+### 3.1 Bug 1: Leg Distortion & Sideways Twisting in Run Mode
+*   **Symptom:** In run mode, the character's left leg twisted 90 degrees outward, warping the ankle and flattening the foot.
+*   **Cause:** The procedural script `ProceduralHumanoidAnimator` was running in `LateUpdate()`, overriding keyframed FBX rotations. Because `Start()` executed after the first frame's animation, it recorded an asymmetrical default pose. Applying rotational updates onto this skewed pose caused the leg joints to rotate beyond anatomical limits. In addition, Character Creator rigs have longitudinal local X-axes, meaning the script's hardcoded X-axis rotation twisted (rolled) the bone rather than bending it.
+*   **Resolution:** Completely removed the `ProceduralHumanoidAnimator` component reference from `Pangopal_01` in [Mob Squad 3d world scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/Mob%20Squad%203d%20world%20scene.unity) and set its enabled state to `0` (disabled) in the scene file.
 
-This causes a severe conflict:
-*   **Asymmetrical Default Pose Capture:** In `ProceduralHumanoidAnimator.Start()`, the script saves the "default" T-pose rotations by calling `SaveDefaultPose()`. However, Unity's `Animator` updates in the first frame *before* `Start()` executes, applying the default frame of the active locomotion clip (usually an asymmetrical Idle stance). 
-*   Because of this, `leftThighDefaultRot` is saved with a skewed offset. When the script multiplies this offset by the procedural swing angle in `LateUpdate()`, the left leg rotates past its anatomical limits, causing distortion.
-
-#### Solution:
-If you are using FBX animation clips (which is the case in this scene, as the animator controller is populated with clips), you should **disable or remove** the `ProceduralHumanoidAnimator` component from `Pangopal_01`. They should not be used together.
-
----
-
-### 3.2 Cause B: Humanoid Avatar Auto-Mapping Error (Secondary)
-The character model `Pangopal_01` is built using the Character Creator skeleton format, which contains multiple "twist" helper bones in the extremities, e.g.:
-*   `CC_Base_L_Thigh` (the primary upper leg joint)
-*   `CC_Base_L_ThighTwist01` / `CC_Base_L_ThighTwist02` (deformation helpers)
-
-In [Pangopal_01.Fbx.meta](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/3d/characters/pongotest/Pangopal_01.Fbx.meta), the `human` mapping list is empty:
-```yaml
-  humanDescription:
-    serializedVersion: 3
-    human: []
-```
-This forces Unity to use **Automatic Rig Mapping** on import. 
-*   **The Glitch:** Because of the similar naming conventions, Unity's auto-mapper can mistakenly bind `CC_Base_L_ThighTwist01` as the `LeftUpperLeg` humanoid bone instead of `CC_Base_L_Thigh`.
-*   **Result:** When Mecanim plays the run animation, the large leg rotation angles are applied to the twist helper bone instead of the main joint. This twists the middle of the thigh mesh, causing a crumpled, collapsing distortion visible in run mode.
-
-#### Solution:
-1.  Select [Pangopal_01.Fbx](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/3d/characters/pongotest/Pangopal_01.Fbx) in the Unity Project window.
-2.  Go to the **Rig** tab in the Inspector and click **Configure...** under the Humanoid Avatar settings.
-3.  Ensure the bone mappings for the **Left Leg** are assigned exactly as follows:
-    *   **Left Upper Leg:** `CC_Base_L_Thigh` (not `CC_Base_L_ThighTwist01` or `Pelvis`)
-    *   **Left Lower Leg:** `CC_Base_L_Calf` (not a calf twist bone)
-    *   **Left Foot:** `CC_Base_L_Foot`
-4.  Repeat for the right leg and click **Apply**.
+### 3.2 Bug 2: Bones Breaking & Lack of Walking State
+*   **Symptom:** Locomotion was severely deformed (bones looked like they were snapping/breaking), and pressing WASD triggered the running animation instantly instead of walking.
+*   **Cause A (Broken Bones):** The `Animator` component had a NULL avatar (`m_Avatar: {fileID: 0}`). The automated helper script looked for a non-existent standalone `.asset` file, leaving the rig without a humanoid retargeting mapping. Without an avatar, Mecanim couldn't translate FBX humanoid keyframes to the custom `CC_Base_` joints.
+*   **Cause B (No Walking State):** The script was sending `Speed = 1f` for Walk and `Speed = 2f` for Run. Since the Blend Tree's maximum threshold was `1.0`, any speed input of `1f` or higher was clamped to the Run animation state.
+*   **Resolutions:**
+    1.  **Avatar Fixed:** Patched [Mob Squad 3d world scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/Mob%20Squad%203d%20world%20scene.unity) to map the correct embedded humanoid avatar sub-asset (`fileID: 9000000`) inside `Pangopal_01.Fbx`.
+    2.  **Editor Script Updated:** Patched [ThirdPersonSetupHelper.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Editor/ThirdPersonSetupHelper.cs) to dynamically extract the avatar sub-asset from the FBX during configuration.
+    3.  **Thresholds Synced:** Modified `ThirdPersonCharacterController.cs` to output `0.5f` during walk movements, allowing the Walking animation to blend in properly.

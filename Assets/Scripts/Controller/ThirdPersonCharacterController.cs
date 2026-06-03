@@ -13,13 +13,26 @@ public class ThirdPersonCharacterController : MonoBehaviour
     public float rotationSpeed = 10.0f;
     public float gravity = 9.81f;
 
-    [Header("Camera Reference")]
+    [Header("Camera Reference & Settings")]
     [Tooltip("Reference to the main camera transform. If left null, Camera.main will be used.")]
     public Transform cameraTransform;
+    
+    [Tooltip("Speed OF Mouse movement.")]
+    public float mouseSensitivity = 2.0f;
+    [Tooltip("Distance from camera to the main camera.")]
+    public float cameraDistance = 4.0f;     
+    [Tooltip("Height of the camera from the character's position.")]
+    public float cameraHeight = 1.5f;       
+    public float minPitch = -20f;           
+    public float maxPitch = 60f;            
 
     private CharacterController controller;
     private Animator animator;
     private float verticalVelocity = 0f;
+
+    // ক্যামেরার রোটেশন ধরে রাখার ভ্যারিয়েবল
+    private float pitch = 0f;
+    private float yaw = 0f;
 
     private void Start()
     {
@@ -35,6 +48,10 @@ public class ThirdPersonCharacterController : MonoBehaviour
         {
             Debug.LogError("[ThirdPersonCharacterController] Main Camera not found in the scene! Please assign it manually.");
         }
+
+        // গেম চালুর সাথে সাথে মাউস কার্সর হাইড করে স্ক্রিনের মাঝে লক করে দেবে
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void Update()
@@ -108,18 +125,38 @@ public class ThirdPersonCharacterController : MonoBehaviour
         // Apply movement through Unity CharacterController
         controller.Move(velocity * Time.deltaTime);
 
-        // 5. Bind parameters to the Animator Controller (if present)
+        // 5. Bind parameters to the Animator Controller
         if (animator != null)
         {
-            // Speed float parameter for blending between Idle (0), Walk (0.5), and Run (1.0)
             float speedParam = 0f;
             if (inputDir.magnitude > 0.05f)
             {
                 speedParam = isRunning ? 1f : 0.5f;
             }
             
-            // Damp speed parameter update for smooth animation state blending
             animator.SetFloat("Speed", speedParam, 0.15f, Time.deltaTime);
         }
+    }
+    
+    private void LateUpdate()
+    {
+        if (cameraTransform == null) return;
+
+        // মাউস ইনপুট নেওয়া
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        yaw += mouseX;
+        pitch -= mouseY;
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
+
+        // ক্যামেরার নতুন রোটেশন এবং পজিশন ক্যালকুলেট করা
+        Vector3 targetPosition = transform.position + Vector3.up * cameraHeight;
+        Quaternion camRotation = Quaternion.Euler(pitch, yaw, 0f);
+        Vector3 camPosition = targetPosition - (camRotation * Vector3.forward * cameraDistance);
+
+        // ক্যামেরাকে পজিশনে বসানো
+        cameraTransform.position = camPosition;
+        cameraTransform.rotation = camRotation;
     }
 }
