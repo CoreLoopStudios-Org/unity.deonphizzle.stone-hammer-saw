@@ -1,0 +1,50 @@
+﻿
+================ INSPECTING: Mob Squad 3d world scene.unity ================
+
+Script: SceneOrientationController (FileID: 39904202) attached to GameObject: "OrientationController"
+Fields:
+  m_EditorHideFlags: 0
+  m_Name: 
+
+Script: ThirdPersonCharacterController (FileID: 5709256303530233764) attached to GameObject: "Pangopal_01"
+Fields:
+  m_EditorHideFlags: 0
+  m_Name: 
+  walkSpeed: 3
+  runSpeed: 6
+  rotationSpeed: 10
+  gravity: 9.81
+  cameraTransform: {fileID: 961739753}  -> (Resolves to: "Main Camera")
+
+================ INSPECTING: Mov Squad 3d world scene.unity ================
+
+Script: SceneOrientationController (FileID: 39904202) attached to GameObject: "OrientationController"
+Fields:
+  m_EditorHideFlags: 0
+  m_Name: 
+
+Script: ThirdPersonCameraController (FileID: 961739755) attached to GameObject: "Main Camera"
+Fields:
+  m_EditorHideFlags: 0
+  m_Name: 
+  target: {fileID: 4931594387397547289}  -> (Resolves to: "Pangopal_01")
+  targetOffsetHeight: 1.5
+  distance: 4
+  minDistance: 2
+  maxDistance: 10
+  xSpeed: 120
+  ySpeed: 120
+  zoomSpeed: 2
+  yMinLimit: -20
+  yMaxLimit: 60
+  smoothTime: 0.12
+
+Script: ThirdPersonCharacterController (FileID: 5709256303530233764) attached to GameObject: "Pangopal_01"
+Fields:
+  m_EditorHideFlags: 0
+  m_Name: 
+  walkSpeed: 3
+  runSpeed: 6
+  rotationSpeed: 10
+  gravity: 9.81
+  cameraTransform: {fileID: 961739753}  -> (Resolves to: "Main Camera")

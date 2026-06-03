@@ -2534,7 +2534,7 @@ Animator:
   m_GameObject: {fileID: 5709256303530233763}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 935e5de80557ff54391a0dbb7cbe5a6a, type: 3}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0cb43e3e5cedc0348a13a5cef289fd6e, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
@@ -3963,6 +3963,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4931594387397547289}
   - component: {fileID: 1337751762615521123}
+  - component: {fileID: 5709256303530233765}
+  - component: {fileID: 5709256303530233764}
   m_Layer: 0
   m_Name: Pangopal_01
   m_TagString: Untagged
@@ -3970,6 +3972,48 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &5709256303530233764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5709256303530233763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18be12ac5c27c94408ee8e2a8fa64086, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCharacterController
+  walkSpeed: 3
+  runSpeed: 6
+  rotationSpeed: 10
+  gravity: 9.81
+  cameraTransform: {fileID: 961739753}
+--- !u!143 &5709256303530233765
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5709256303530233763}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &5864381054647701447
 Transform:
   m_ObjectHideFlags: 0
