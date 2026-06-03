@@ -1,0 +1,4 @@
+﻿
+================ INSPECTING CANVAS: Mob Squad 3d world scene.unity ================
+Canvas GameObject ID: 1125946987, RectTransform ID: 1125946991
+|- Canvas (GO_ID: 1125946987, Trans_ID: 1125946991)
