@@ -116,7 +116,17 @@ public class ThirdPersonSetupHelper
             animator = playerRoot.AddComponent<Animator>();
         }
         animator.runtimeAnimatorController = controller;
-        animator.avatar = AssetDatabase.LoadAssetAtPath<Avatar>("Assets/3d/characters/pongotest/Pangopal_01-Avatar.asset");
+        
+        // Load avatar sub-asset from FBX
+        object[] assets = AssetDatabase.LoadAllAssetsAtPath(fbxPath);
+        foreach (var asset in assets)
+        {
+            if (asset is Avatar)
+            {
+                animator.avatar = (Avatar)asset;
+                break;
+            }
+        }
 
         // 7. Attach ThirdPersonCharacterController
         ThirdPersonCharacterController tpController = playerRoot.GetComponent<ThirdPersonCharacterController>();

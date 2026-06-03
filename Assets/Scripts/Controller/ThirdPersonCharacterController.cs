@@ -111,11 +111,11 @@ public class ThirdPersonCharacterController : MonoBehaviour
         // 5. Bind parameters to the Animator Controller (if present)
         if (animator != null)
         {
-            // Speed float parameter for blending between Idle (0), Walk (1), and Run (2)
+            // Speed float parameter for blending between Idle (0), Walk (0.5), and Run (1.0)
             float speedParam = 0f;
             if (inputDir.magnitude > 0.05f)
             {
-                speedParam = isRunning ? 2f : 1f;
+                speedParam = isRunning ? 1f : 0.5f;
             }
             
             // Damp speed parameter update for smooth animation state blending
