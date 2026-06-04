@@ -1157,7 +1157,7 @@ GameObject:
   - component: {fileID: 398629119}
   - component: {fileID: 398629118}
   m_Layer: 5
-  m_Name: Pony Pack
+  m_Name: 'Pony Pack-click to load ponypack scene '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4823,6 +4823,8 @@ MonoBehaviour:
   appLoadingText: {fileID: 1451645389}
   playerNameInput: {fileID: 521367201}
   gameLoadingBar: {fileID: 499176181}
+  mobSquadLoadingPanel: {fileID: 0}
+  mobSquadLoadingBar: {fileID: 0}
   timerText: {fileID: 450478122}
   roundText: {fileID: 684518906}
   progressBar: {fileID: 165795619}

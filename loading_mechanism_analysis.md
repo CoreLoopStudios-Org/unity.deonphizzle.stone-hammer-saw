@@ -140,17 +140,21 @@ When transitioning to the **Mob Squad** scene (`Mob-Squad-Scene`), a dedicated l
 
 ---
 
-## 5. System 4: Scene-Local Loading Redirect (`SceneLoadingController` & `Put` Panel)
+## 5. System 4: Scene-Local Loading Redirects (`SceneLoadingController`)
 
-Once the `Mob-Squad-Scene` scene is loaded, it executes a scene-local loading screen animation before revealing the game instructions.
+Once the game scenes (`Mob-Squad-Scene` or `PonyPackScene`) are loaded, they execute a scene-local loading screen animation before revealing the game instructions panel.
 
-### 5.1 Structure & Configuration
+### 5.1 Scene 1: Mob-Squad-Scene Configuration
 *   **Scene Loading Panel**: `'LoadinScreen-mob squead scene '` (`fileID: 1857412072`) is active on load and holds the [SceneLoadingController](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/SceneLoadingController.cs) script.
 *   **Redirect Target**: The `redirectPanel` parameter is mapped to the **`Put`** GameObject (`fileID: 1582699056`), which displays the "Put the Phone in Table" instruction panel.
 
-### 5.2 Transition Logic
-1.  On scene `Start()`, `SceneLoadingController` resets and starts filling the `Fill` progress bar Image (`fileID: 882271725`) to `1f` over **3 seconds**.
-2.  Once completed, the loading panel deactivates (`loadingPanel.SetActive(false)`) and the **`Put`** panel is set active:
+### 5.2 Scene 2: PonyPackScene Configuration
+*   **Scene Loading Panel**: `'LoadinScreen -PonyPack'` (`fileID: 458618017`) is active on load and holds the [SceneLoadingController](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/SceneLoadingController.cs) script.
+*   **Redirect Target**: The `redirectPanel` parameter is mapped to the **`Put (1)`** GameObject (`fileID: 2147452022`), which displays the "Put the Phone in Table" instruction panel.
+
+### 5.3 Transition Logic
+1.  On scene `Start()`, `SceneLoadingController` resets and starts filling the progress bar Image (fill amount: `0f` $\rightarrow$ `1f`) over **3 seconds**.
+2.  Once completed, the loading panel deactivates (`loadingPanel.SetActive(false)`) and the respective redirect instruction panel is set active:
     ```csharp
     loadingPanel.SetActive(false);
     if (redirectPanel != null)
