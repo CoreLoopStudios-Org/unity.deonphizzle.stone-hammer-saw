@@ -22,6 +22,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI appLoadingText; 
     public TMP_InputField playerNameInput; 
     public Image gameLoadingBar;      
+    public GameObject mobSquadLoadingPanel;
+    public Image mobSquadLoadingBar;
 
     [Header("Gameplay UI")]
     public TextMeshProUGUI timerText;
@@ -185,7 +187,30 @@ public class UIManager : MonoBehaviour
     // Mob Squad বাটনে ক্লিক করলে এটি কল হবে
     public void OnMobSquadButtonClicked()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+        if (mobSquadLoadingPanel != null)
+        {
+            ShowPanel(mobSquadLoadingPanel);
+            if (mobSquadLoadingBar != null)
+            {
+                mobSquadLoadingBar.fillAmount = 0f;
+                mobSquadLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+                });
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+            }
+        }
+        else
+        {
+            // Fallback: use gameLoadingPanel
+            StartGameSpecificLoading(() =>
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+            });
+        }
     }
 
     private void ShowPanel(GameObject panelToShow)
@@ -199,6 +224,7 @@ public class UIManager : MonoBehaviour
         if (characterPanel != null) characterPanel.SetActive(false);
         if (winPanel != null) winPanel.SetActive(false);
         if (lossPanel != null) lossPanel.SetActive(false);
+        if (mobSquadLoadingPanel != null) mobSquadLoadingPanel.SetActive(false);
 
         panelToShow.SetActive(true);
     }
