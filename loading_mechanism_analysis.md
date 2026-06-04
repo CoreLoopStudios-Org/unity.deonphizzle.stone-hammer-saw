@@ -190,3 +190,23 @@ private void OnEnable()
     });
 }
 ```
+
+---
+
+## 7. System 6: Tap to Close Overlay (`TapToClosePanel`)
+
+To close the "TAP TO PLAY" overlay instructions panel and load the 3D camera gameplay view:
+
+### 7.1 Setup & Configuration
+*   **Scene GameObject**: `Tap (1)` (`fileID: 931829984`) in `PonyPackScene` is bound to the [TapToClosePanel](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/TapToClosePanel.cs) script.
+*   **Interaction Type**: The panel has `RaycastTarget` set to `1` (true), covering the full screen and capturing pointer clicks or phone screen touches.
+
+### 7.2 Close & Reveal Logic
+1.  When a player clicks/taps on the screen, Unity's EventSystem invokes `OnPointerClick`:
+    ```csharp
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        gameObject.SetActive(false);
+    }
+    ```
+2.  Deactivating `Tap (1)` immediately removes the full-screen dark overlay and reveals the 3D Main Camera view of the arena underneath.
