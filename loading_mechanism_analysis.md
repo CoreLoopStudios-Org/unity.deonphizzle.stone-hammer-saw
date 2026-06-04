@@ -137,3 +137,24 @@ When transitioning to the **Mob Squad** scene (`Mob-Squad-Scene`), a dedicated l
     *   **If Assigned**: Displays the custom `mobSquadLoadingPanel`, resets `mobSquadLoadingBar.fillAmount = 0f`, and tweens it to `1f` (100% full) over **3 seconds** using DOTween. Upon completion, it loads the `Mob-Squad-Scene`.
     *   **Fallback (If Null)**: Triggers the generic `StartGameSpecificLoading()` transition to display the default multiplayer loading screen, and loads the scene upon its 3-second completion callback.
 3.  **Registration**: `mobSquadLoadingPanel` is automatically disabled inside `ShowPanel(panelToShow)` to ensure UI cleanliness when showing other panels.
+
+---
+
+## 5. System 4: Scene-Local Loading Redirect (`SceneLoadingController` & `Put` Panel)
+
+Once the `Mob-Squad-Scene` scene is loaded, it executes a scene-local loading screen animation before revealing the game instructions.
+
+### 5.1 Structure & Configuration
+*   **Scene Loading Panel**: `'LoadinScreen-mob squead scene '` (`fileID: 1857412072`) is active on load and holds the [SceneLoadingController](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/SceneLoadingController.cs) script.
+*   **Redirect Target**: The `redirectPanel` parameter is mapped to the **`Put`** GameObject (`fileID: 1582699056`), which displays the "Put the Phone in Table" instruction panel.
+
+### 5.2 Transition Logic
+1.  On scene `Start()`, `SceneLoadingController` resets and starts filling the `Fill` progress bar Image (`fileID: 882271725`) to `1f` over **3 seconds**.
+2.  Once completed, the loading panel deactivates (`loadingPanel.SetActive(false)`) and the **`Put`** panel is set active:
+    ```csharp
+    loadingPanel.SetActive(false);
+    if (redirectPanel != null)
+    {
+        redirectPanel.SetActive(true);
+    }
+    ```

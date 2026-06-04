@@ -2312,6 +2312,7 @@ MonoBehaviour:
   loadingBar: {fileID: 882271725}
   loadingText: {fileID: 340706019}
   loadingDuration: 3
+  redirectPanel: {fileID: 1582699056}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

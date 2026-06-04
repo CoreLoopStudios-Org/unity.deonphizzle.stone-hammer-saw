@@ -10,6 +10,7 @@ public class SceneLoadingController : MonoBehaviour
     [SerializeField] private Image loadingBar;
     [SerializeField] private TextMeshProUGUI loadingText;
     [SerializeField] private float loadingDuration = 3.0f;
+    [SerializeField] private GameObject redirectPanel;
 
     private void Start()
     {
@@ -26,6 +27,10 @@ public class SceneLoadingController : MonoBehaviour
                     .OnComplete(() =>
                     {
                         loadingPanel.SetActive(false);
+                        if (redirectPanel != null)
+                        {
+                            redirectPanel.SetActive(true);
+                        }
                     });
             }
             else
@@ -34,6 +39,10 @@ public class SceneLoadingController : MonoBehaviour
                 DOVirtual.DelayedCall(loadingDuration, () =>
                 {
                     loadingPanel.SetActive(false);
+                    if (redirectPanel != null)
+                    {
+                        redirectPanel.SetActive(true);
+                    }
                 });
             }
 
