@@ -165,16 +165,28 @@ Once the game scenes (`Mob-Squad-Scene` or `PonyPackScene`) are loaded, they exe
 
 ---
 
-## 6. System 5: Post-Load Instruction Progression (`TimedPanelTransition`)
+## 6. System 5: Post-Load Instruction Progressions (`TimedPanelTransition`)
 
-For the **Mob Squad** mode, there is a multi-step instruction progression sequence after loading completes:
+After loading deactivates, both game modes execute a multi-step instruction progression sequence using the [TimedPanelTransition](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/TimedPanelTransition.cs) script:
 
-1.  **Phase 1: Put Phone Panel**: Loaded via redirect from the loading controller. The **`Put`** panel (`fileID: 1582699056`) runs the [TimedPanelTransition](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/TimedPanelTransition.cs) script.
-2.  **Phase 2: Transition (3s Delay)**: When `Put` is set active, `TimedPanelTransition` triggers:
-    ```csharp
-    DOVirtual.DelayedCall(waitDuration, () => {
-        currentPanel.SetActive(false); // Hides 'Put' panel
-        nextPanel.SetActive(true);    // Shows 'Tap' panel
+### 6.1 Scene 1: Mob Squad Sequence
+1.  **Phase 1 (Put Panel)**: Loaded via loading redirect. The **`Put`** panel (`fileID: 1582699056`) runs the transition controller.
+2.  **Phase 2 (Transition)**: After 3 seconds, `TimedPanelTransition` triggers, setting `Put` inactive and activating the next screen.
+3.  **Phase 3 (Tap Panel)**: The **`Tap`** panel (`fileID: 1230892216`) is set active to present the "TAP TO PLAY" overlay.
+
+### 6.2 Scene 2: Pony Pack Sequence
+1.  **Phase 1 (Put Panel)**: Loaded via loading redirect. The **`Put (1)`** panel (`fileID: 2147452022`) runs the transition controller.
+2.  **Phase 2 (Transition)**: After 3 seconds, `TimedPanelTransition` triggers, setting `Put (1)` inactive and activating the next screen.
+3.  **Phase 3 (Tap Panel)**: The **`Tap (1)`** panel (`fileID: 931829984`) is set active to present the "TAP TO PLAY" overlay.
+
+### 6.3 Code Transition Logic
+```csharp
+private void OnEnable()
+{
+    DOVirtual.DelayedCall(waitDuration, () =>
+    {
+        if (currentPanel != null) currentPanel.SetActive(false);
+        if (nextPanel != null) nextPanel.SetActive(true);
     });
-    ```
-3.  **Phase 3: Tap Panel**: The **`Tap`** panel (`fileID: 1230892216`) is set active to present the "TAP TO PLAY" overlay to the user.
+}
+```

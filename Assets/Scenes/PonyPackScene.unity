@@ -2106,6 +2106,7 @@ GameObject:
   - component: {fileID: 2147452023}
   - component: {fileID: 2147452025}
   - component: {fileID: 2147452024}
+  - component: {fileID: 2147452026}
   m_Layer: 5
   m_Name: Put (1)
   m_TagString: Untagged
@@ -9820,6 +9821,21 @@ MonoBehaviour:
   loadingText: {fileID: 1543633925}
   loadingDuration: 3
   redirectPanel: {fileID: 2147452022}
+--- !u!114 &2147452026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2147452022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimedPanelTransition
+  currentPanel: {fileID: 2147452022}
+  nextPanel: {fileID: 931829984}
+  waitDuration: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
