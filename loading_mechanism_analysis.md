@@ -210,3 +210,26 @@ To close the "TAP TO PLAY" overlay instructions panel and load the 3D camera gam
     }
     ```
 2.  Deactivating `Tap (1)` immediately removes the full-screen dark overlay and reveals the 3D Main Camera view of the arena underneath.
+
+---
+
+## 8. System 7: Tap to Load Gameplay Scene (`TapToLoadScene`)
+
+In the **Mob Squad** sequence, deactivating the final instructions overlay triggers a transition to the playable 3D gameplay scene rather than just revealing local arena meshes.
+
+### 8.1 Setup & Configuration
+*   **Scene GameObject**: `Tap-loads mob-squead3d world panel` (`fileID: 1230892216`) in `Mob-Squad-Scene` is bound to the [TapToLoadScene](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/TapToLoadScene.cs) script.
+*   **Redirect Scene**: The `sceneToLoad` parameter is set to `"Mob Squad 3d world scene"`.
+
+### 8.2 Scene Load Logic
+1.  When the player clicks or touches the instruction overlay, `OnPointerClick` is invoked:
+    ```csharp
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (!string.IsNullOrEmpty(sceneToLoad))
+        {
+            SceneManager.LoadScene(sceneToLoad);
+        }
+    }
+    ```
+2.  This triggers Unity to load and launch the active gameplay sandbox [Mob Squad 3d world scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/Mob%20Squad%203d%20world%20scene.unity) immediately.

@@ -1402,8 +1402,9 @@ GameObject:
   - component: {fileID: 1230892217}
   - component: {fileID: 1230892219}
   - component: {fileID: 1230892218}
+  - component: {fileID: 1230892220}
   m_Layer: 5
-  m_Name: Tap
+  m_Name: Tap-loads mob-squead3d world panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1695,6 +1696,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1582699056}
   m_CullTransparentMesh: 1
+--- !u!114 &1582699060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582699056}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimedPanelTransition
+  currentPanel: {fileID: 1582699056}
+  nextPanel: {fileID: 1230892216}
+  waitDuration: 3
+--- !u!114 &1230892220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230892216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TapToLoadScene
+  sceneToLoad: Mob Squad 3d world scene
 --- !u!1 &1624958121
 GameObject:
   m_ObjectHideFlags: 0
@@ -2124,6 +2153,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1857412072}
   m_CullTransparentMesh: 1
+--- !u!114 &1857412076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857412072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneLoadingController
+  loadingPanel: {fileID: 1857412072}
+  loadingBar: {fileID: 882271725}
+  loadingText: {fileID: 340706019}
+  loadingDuration: 3
+  redirectPanel: {fileID: 1582699056}
 --- !u!1 &1892764186
 GameObject:
   m_ObjectHideFlags: 0
@@ -2220,7 +2266,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1857412073}
-  - {fileID: 1503522087}
   - {fileID: 1582699057}
   - {fileID: 1230892217}
   - {fileID: 1782065426}
@@ -2297,38 +2342,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 604712594}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1857412076
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1857412072}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SceneLoadingController
-  loadingPanel: {fileID: 1857412072}
-  loadingBar: {fileID: 882271725}
-  loadingText: {fileID: 340706019}
-  loadingDuration: 3
-  redirectPanel: {fileID: 1582699056}
---- !u!114 &1582699060
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1582699056}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TimedPanelTransition
-  currentPanel: {fileID: 1582699056}
-  nextPanel: {fileID: 1230892216}
-  waitDuration: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
