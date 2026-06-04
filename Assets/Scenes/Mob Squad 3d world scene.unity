@@ -3845,6 +3845,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SquidGameManager
   timeLimit: 100
   dollMusic: {fileID: 2117154450}
+  reactionTime: 0.5
   isGreenLight: 1
   isGameOver: 0
 --- !u!4 &2117154452
@@ -5450,8 +5451,8 @@ Transform:
   m_GameObject: {fileID: 5709256303530233763}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9999584, z: -0, w: 0.009120198}
-  m_LocalPosition: {x: 0, y: -0.17, z: 0}
-  m_LocalScale: {x: 2.3612, y: 2.3612, z: 2.3612}
+  m_LocalPosition: {x: 3.8602, y: -0.167, z: 110.54}
+  m_LocalScale: {x: 2.5073583, y: 2.5073583, z: 2.5073583}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7151365782704381127}
