@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/HomeScene.unity
     guid: 4d4162e722f2abb408af9da16b6f9de4
+  - enabled: 1
+    path: Assets/Scenes/PonyPackScene.unity
+    guid: 3f50b2f7e7bd34646b709cdd3e1431fc
+  - enabled: 1
+    path: Assets/Scenes/Mob-Squad-Scene.unity
+    guid: c6dffd0bb4f276b4aaa33891ee86904d
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02

@@ -176,6 +176,18 @@ public class UIManager : MonoBehaviour
             GameplayController.Instance.TriggerNextRound();
     }
 
+    // Pony Pack বাটনে ক্লিক করলে এটি কল হবে
+    public void OnPonyPackButtonClicked()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("PonyPackScene");
+    }
+
+    // Mob Squad বাটনে ক্লিক করলে এটি কল হবে
+    public void OnMobSquadButtonClicked()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+    }
+
     private void ShowPanel(GameObject panelToShow)
     {
         if (panelToShow == null) return;

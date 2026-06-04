@@ -77,13 +77,13 @@ Assets/Scripts/
 The project contains five primary scene assets:
 
 1.  **[HomeScene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/HomeScene.unity)**
-    *   **Purpose**: The production starting point. Contains the complete game flow: Lobby Panel, character model select, player login fields, Fusion matchmaking runner setup, and the weapon selection UI slot manager.
+    *   **Purpose**: The production starting point. Contains the complete game flow: Lobby Panel, character select, player login input, Fusion matchmaking runner setup, and the weapon slot machine. Recently updated with unified canvas adjustments.
 2.  **[PonyPackScene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/PonyPackScene.unity)**
-    *   **Purpose**: Dedicated 3D combat/animation sandbox. Pre-built with platform structures, spotlight grids, Attacker and Victim models. Does not contain matchmaking scripts. Useful for debugging bone sequences.
+    *   **Purpose**: Dedicated 3D combat/animation sandbox. Pre-built with platform structures, spotlight grids, and Pungopup models. Recently updated to include loading panel elements for scene transitions.
 3.  **[Mov Squad 3d world scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Mov%20Squad%203d%20world%20scene.unity)**
     *   **Purpose**: Controls sandbox scene. Utilizes [ThirdPersonCameraController](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/ThirdPersonCameraController.cs) attached to a root camera node.
 4.  **[Mob Squad 3d world scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/Mob%20Squad%203d%20world%20scene.unity)**
-    *   **Purpose**: Alternate controls sandbox scene. Rigged camera is parented rigidly to character joints without rotation controllers.
+    *   **Purpose**: Musical chairs arena sandbox scene. Recently updated to include newly imported 3D props: **Gate** models (`Assets/3d/Arena-3d Models/Gate/`) and the **Mystical Box** (`Assets/3d/Arena-3d Models/Box/Box.fbx`) representing the Game Mode 3 components. Rigged camera is parented rigidly to character joints without rotation controllers.
 5.  **[Mob-Squad-Scene.unity](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scenes/Mob-Squad-Scene.unity)**
     *   **Purpose**: Legacy control workspace.
 
