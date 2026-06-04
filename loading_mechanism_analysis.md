@@ -154,7 +154,7 @@ Once the game scenes (`Mob-Squad-Scene` or `PonyPackScene`) are loaded, they exe
 
 ### 5.3 Transition Logic
 1.  On scene `Start()`, `SceneLoadingController` resets and starts filling the progress bar Image (fill amount: `0f` $\rightarrow$ `1f`) over **3 seconds**.
-2.  Once completed, the loading panel deactivates (`loadingPanel.SetActive(false)`) and the respective redirect instruction panel is set active:
+3.  Once completed, the loading panel deactivates (`loadingPanel.SetActive(false)`) and the respective redirect instruction panel is set active:
     ```csharp
     loadingPanel.SetActive(false);
     if (redirectPanel != null)
@@ -162,3 +162,19 @@ Once the game scenes (`Mob-Squad-Scene` or `PonyPackScene`) are loaded, they exe
         redirectPanel.SetActive(true);
     }
     ```
+
+---
+
+## 6. System 5: Post-Load Instruction Progression (`TimedPanelTransition`)
+
+For the **Mob Squad** mode, there is a multi-step instruction progression sequence after loading completes:
+
+1.  **Phase 1: Put Phone Panel**: Loaded via redirect from the loading controller. The **`Put`** panel (`fileID: 1582699056`) runs the [TimedPanelTransition](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/TimedPanelTransition.cs) script.
+2.  **Phase 2: Transition (3s Delay)**: When `Put` is set active, `TimedPanelTransition` triggers:
+    ```csharp
+    DOVirtual.DelayedCall(waitDuration, () => {
+        currentPanel.SetActive(false); // Hides 'Put' panel
+        nextPanel.SetActive(true);    // Shows 'Tap' panel
+    });
+    ```
+3.  **Phase 3: Tap Panel**: The **`Tap`** panel (`fileID: 1230892216`) is set active to present the "TAP TO PLAY" overlay to the user.
