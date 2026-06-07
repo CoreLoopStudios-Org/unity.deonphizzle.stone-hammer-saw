@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv \"G3GameManager.cs.cs\" \"G3GameManager.cs\")",
+      "Bash(mv \"GyroDetectionManager.cs.cs\" \"GyroDetectionManager.cs\")",
+      "Bash(mv \"GyroDetectionTestHelper.cs.cs\" \"GyroDetectionTestHelper.cs\")",
+      "Bash(mv \"WeaponSelectManager.cs.cs\" \"WeaponSelectManager.cs\")"
+    ]
+  }
+}
