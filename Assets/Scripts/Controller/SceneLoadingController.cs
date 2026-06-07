@@ -12,7 +12,7 @@ public class SceneLoadingController : MonoBehaviour
     [SerializeField] private float loadingDuration = 3.0f;
     [SerializeField] private GameObject redirectPanel;
 
-    private void Start()
+    private void OnEnable()
     {
         if (loadingPanel != null)
         {
