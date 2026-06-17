@@ -8,9 +8,33 @@ public class WeaponSelectSetupHelper
     [MenuItem("Tools/Stone Hammer Saw/Setup Weapon Select in 3D Scene")]
     public static void SetupWeaponSelect()
     {
-        // 1. Export Weapon-Select-Panel from HomeScene as Prefab
+        // Ensure Resources folder exists
+        string resourcesFolder = "Assets/Resources";
+        if (!AssetDatabase.IsValidFolder(resourcesFolder))
+        {
+            AssetDatabase.CreateFolder("Assets", "Resources");
+        }
+
+        // 1. Export SledgeHammer2 FBX as a Prefab in Resources
+        string hammerFBXPath = "Assets/3d/Hammer/SledgeHammer2.fbx";
+        string targetHammerPrefabPath = "Assets/Resources/SledgeHammer2.prefab";
+        GameObject hammerFBX = AssetDatabase.LoadAssetAtPath<GameObject>(hammerFBXPath);
+        if (hammerFBX != null)
+        {
+            GameObject hammerPrefab = PrefabUtility.SaveAsPrefabAsset(hammerFBX, targetHammerPrefabPath);
+            if (hammerPrefab != null)
+            {
+                Debug.Log($"[WeaponSelectSetup] Successfully exported Hammer prefab to: {targetHammerPrefabPath}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"[WeaponSelectSetup] SledgeHammer2 FBX not found at: {hammerFBXPath}");
+        }
+
+        // 2. Export Weapon-Select-Panel from HomeScene as Prefab in Resources
         string homeScenePath = "Assets/Scenes/HomeScene.unity";
-        string targetPrefabPath = "Assets/Prefabs/Weapon-Select-Panel.prefab";
+        string targetPrefabPath = "Assets/Resources/Weapon-Select-Panel.prefab";
 
         Debug.Log("[WeaponSelectSetup] Opening HomeScene to extract Weapon-Select-Panel...");
         Scene homeScene = EditorSceneManager.OpenScene(homeScenePath, OpenSceneMode.Single);
@@ -19,14 +43,8 @@ public class WeaponSelectSetupHelper
         if (weaponSelectPanelGo == null)
         {
             Debug.LogError("[WeaponSelectSetup] 'Weapon-Select-Panel' not found in HomeScene!");
-            EditorUtility.DisplayDialog("Setup Error", "'Weapon-Select-Panel' GameObject could not be found in HomeScene. Make sure the scene has not been renamed.", "OK");
+            EditorUtility.DisplayDialog("Setup Error", "'Weapon-Select-Panel' GameObject could not be found in HomeScene.", "OK");
             return;
-        }
-
-        // Ensure Prefabs folder exists
-        if (!AssetDatabase.IsValidFolder("Assets/Prefabs"))
-        {
-            AssetDatabase.CreateFolder("Assets", "Prefabs");
         }
 
         // Save GameObject as a prefab
@@ -36,9 +54,9 @@ public class WeaponSelectSetupHelper
             Debug.LogError("[WeaponSelectSetup] Failed to export Weapon-Select-Panel prefab!");
             return;
         }
-        Debug.Log($"[WeaponSelectSetup] Successfully saved prefab to: {targetPrefabPath}");
+        Debug.Log($"[WeaponSelectSetup] Successfully saved panel prefab to: {targetPrefabPath}");
 
-        // 2. Open Mob Squad 3d world scene
+        // 3. Open Mob Squad 3d world scene
         string targetScenePath = "Assets/Scenes/Mob Squad 3d world scene.unity";
         Debug.Log("[WeaponSelectSetup] Opening Mob Squad 3D world scene...");
         Scene targetScene = EditorSceneManager.OpenScene(targetScenePath, OpenSceneMode.Single);
@@ -81,10 +99,10 @@ public class WeaponSelectSetupHelper
             rectTransform.localScale = Vector3.one;
         }
 
-        // Hide it by default (it will open when player touches the box)
+        // Hide it by default
         instantiatedPanel.SetActive(false);
 
-        // 3. Find the Box GameObject and configure ChestOpeningSequence
+        // 4. Find the Box GameObject and configure ChestOpeningSequence
         GameObject boxGo = GameObject.Find("Box");
         if (boxGo == null)
         {
@@ -103,10 +121,10 @@ public class WeaponSelectSetupHelper
 
             // Setup References
             seq.chestBox = boxGo.transform;
-            seq.chestLid = FindChildRecursive(boxGo.transform, "chest_top"); // Standard lid naming in standard box model
+            
+            seq.chestLid = FindChildRecursive(boxGo.transform, "chest_top");
             if (seq.chestLid == null)
             {
-                // Fallback search for any child containing "lid" or "top"
                 seq.chestLid = FindChildRecursiveNameContains(boxGo.transform, "lid");
                 if (seq.chestLid == null) seq.chestLid = FindChildRecursiveNameContains(boxGo.transform, "top");
             }
@@ -121,17 +139,12 @@ public class WeaponSelectSetupHelper
             }
 
             seq.weaponSelectPanel = instantiatedPanel;
-            seq.slotMachineManager = instantiatedPanel.GetComponent<SlotMachineManager>();
             
-            // Assign hammer prefab from SledgeHammer2
-            GameObject hammerAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/3d/Hammer/SledgeHammer2.fbx");
-            if (hammerAsset != null)
+            // Assign hammer prefab from SledgeHammer2 prefab in Resources
+            GameObject hammerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(targetHammerPrefabPath);
+            if (hammerPrefab != null)
             {
-                seq.hammerPrefab = hammerAsset;
-            }
-            else
-            {
-                Debug.LogWarning("[WeaponSelectSetup] SledgeHammer2.fbx model not found at 'Assets/3d/Hammer/SledgeHammer2.fbx'");
+                seq.hammerPrefab = hammerPrefab;
             }
 
             // Find player hand transform

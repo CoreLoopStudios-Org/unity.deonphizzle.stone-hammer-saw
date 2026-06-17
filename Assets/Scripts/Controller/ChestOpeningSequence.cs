@@ -38,10 +38,8 @@ public class ChestOpeningSequence : MonoBehaviour
     public ParticleSystem openParticleSystem;
 
     [Header("Weapon Selection Integration")]
-    [Tooltip("The Weapon-Select-Panel UI GameObject.")]
+    [Tooltip("The WeoponSelect-Panel-Moiib Squad panel UI GameObject.")]
     public GameObject weaponSelectPanel;
-    [Tooltip("The SlotMachineManager attached to the panel.")]
-    public SlotMachineManager slotMachineManager;
     [Tooltip("Prefab for the Hammer weapon (SledgeHammer2.fbx).")]
     public GameObject hammerPrefab;
     [Tooltip("Cached or explicitly assigned right hand transform of the player.")]
@@ -51,24 +49,19 @@ public class ChestOpeningSequence : MonoBehaviour
     private GameObject spawnedTool;
     private Sequence idleSequence;
 
+    private bool selectionMade = false;
+    private Coroutine countdownCoroutine;
+
     private void Start()
     {
         // Fallbacks if not assigned in Inspector
         if (chestBox == null) chestBox = transform;
         if (spawnPoint == null) spawnPoint = transform;
 
-        // Hook up to the slot machine manager's weapon selection event
-        if (slotMachineManager != null)
+        // Try to find SledgeHammer2 prefab in Resources if not assigned
+        if (hammerPrefab == null)
         {
-            slotMachineManager.OnWeaponSelected += OnWeaponSelected;
-        }
-        else if (weaponSelectPanel != null)
-        {
-            slotMachineManager = weaponSelectPanel.GetComponent<SlotMachineManager>();
-            if (slotMachineManager != null)
-            {
-                slotMachineManager.OnWeaponSelected += OnWeaponSelected;
-            }
+            hammerPrefab = Resources.Load<GameObject>("SledgeHammer2");
         }
     }
 
@@ -106,33 +99,11 @@ public class ChestOpeningSequence : MonoBehaviour
             // Play custom DOTween VFX (glow and burst spheres)
             PlayChestVFXEffects();
 
-            if (weaponSelectPanel != null)
+            // Wait exactly 1.0 second before showing the selection panel
+            DOVirtual.DelayedCall(1.0f, () =>
             {
-                // Wait for the lid opening animation to finish before showing UI
-                DOVirtual.DelayedCall(lidOpenDuration - 0.2f, () =>
-                {
-                    weaponSelectPanel.SetActive(true);
-                    
-                    // Restart slot machine spin
-                    if (slotMachineManager != null)
-                    {
-                        slotMachineManager.ResetAndStartSpin();
-                    }
-                });
-            }
-            else if (toolPrefab != null)
-            {
-                // Fallback behavior: instantiate the default tool prefab immediately
-                spawnedTool = Instantiate(toolPrefab, spawnPoint.position, spawnPoint.rotation);
-                spawnedTool.transform.localScale = Vector3.zero;
-
-                Sequence toolPopSeq = DOTween.Sequence();
-                toolPopSeq.Append(spawnedTool.transform.DOScale(toolTargetScale, popDuration).SetEase(popScaleEase));
-                toolPopSeq.Join(spawnedTool.transform.DOMoveY(spawnPoint.position.y + floatHeight, popDuration).SetEase(popMoveEase));
-                toolPopSeq.Join(spawnedTool.transform.DORotate(new Vector3(0f, 360f, 0f), popDuration, RotateMode.FastBeyond360).SetEase(Ease.OutQuad));
-                
-                toolPopSeq.OnComplete(StartToolIdleAnimation);
-            }
+                ShowWeaponSelectPanel();
+            });
         });
 
         // Open chest lid
@@ -145,8 +116,173 @@ public class ChestOpeningSequence : MonoBehaviour
         openSeq.OnKill(() => chestBox.position = originalBoxPos);
     }
 
-    private void OnWeaponSelected(int weaponIndex)
+    private void ShowWeaponSelectPanel()
     {
+        // Find WeoponSelect-Panel dynamically in the scene if not explicitly assigned
+        if (weaponSelectPanel == null)
+        {
+            weaponSelectPanel = GameObject.Find("WeoponSelect-Panel");
+            if (weaponSelectPanel == null)
+            {
+                weaponSelectPanel = GameObject.Find("WeoponSelect-Panel-Moiib Squad");
+            }
+        }
+
+        if (weaponSelectPanel != null)
+        {
+            weaponSelectPanel.SetActive(true);
+            selectionMade = false;
+
+            // Dynamically assign listeners to any UI Buttons on this panel
+            UnityEngine.UI.Button[] buttons = weaponSelectPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+            
+            // If the panel has no buttons, procedurally create them!
+            if (buttons.Length == 0)
+            {
+                CreateProceduralButtons(weaponSelectPanel);
+            }
+            else
+            {
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    int index = i; // local copy for closure
+                    buttons[i].onClick.RemoveAllListeners();
+                    buttons[i].onClick.AddListener(() => SelectWeapon(index));
+                }
+            }
+
+            // Start the 5-second countdown timer
+            if (countdownCoroutine != null) StopCoroutine(countdownCoroutine);
+            countdownCoroutine = StartCoroutine(StartCountdownTimer());
+        }
+        else
+        {
+            Debug.LogWarning("[ChestOpeningSequence] WeoponSelect-Panel (Moiib Squad) not found in scene! Auto-selecting Hammer.");
+            SelectWeapon(2); // Fallback to Hammer immediately
+        }
+    }
+
+    private void CreateProceduralButtons(GameObject parentPanel)
+    {
+        Debug.Log("[ChestOpeningSequence] No buttons found on WeoponSelect-Panel. Creating procedural weapon buttons...");
+
+        // Add a VerticalLayoutGroup to position buttons automatically
+        UnityEngine.UI.VerticalLayoutGroup layout = parentPanel.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
+        if (layout == null)
+        {
+            layout = parentPanel.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
+            layout.spacing = 15f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+        }
+
+        string[] weaponNames = { "Mini Saw", "Big Saw", "Hammer", "Mini Stone", "Big Stone" };
+
+        for (int i = 0; i < weaponNames.Length; i++)
+        {
+            int index = i; // local copy for closure
+            
+            // Create Button GameObject
+            GameObject btnObj = new GameObject($"Button_{weaponNames[i]}");
+            btnObj.transform.SetParent(parentPanel.transform, false);
+            
+            RectTransform rt = btnObj.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(240f, 55f);
+
+            btnObj.AddComponent<CanvasRenderer>();
+            
+            // Background Image
+            UnityEngine.UI.Image img = btnObj.AddComponent<UnityEngine.UI.Image>();
+            img.color = new Color(0.15f, 0.15f, 0.15f, 0.92f); // Sleek dark gray
+            
+            // Button component
+            UnityEngine.UI.Button btn = btnObj.AddComponent<UnityEngine.UI.Button>();
+            
+            // Add click listener
+            btn.onClick.AddListener(() => SelectWeapon(index));
+
+            // Create Text label
+            GameObject textObj = new GameObject("Label");
+            textObj.transform.SetParent(btnObj.transform, false);
+            
+            RectTransform textRt = textObj.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.sizeDelta = Vector2.zero;
+
+            textObj.AddComponent<CanvasRenderer>();
+            
+            // Use TMPro for high-quality text layout
+            TMPro.TextMeshProUGUI txt = textObj.AddComponent<TMPro.TextMeshProUGUI>();
+            txt.text = weaponNames[i];
+            txt.fontSize = 20;
+            txt.alignment = TMPro.TextAlignmentOptions.Center;
+            txt.color = Color.white;
+            
+            // Smoothly pop-in the button
+            btnObj.transform.localScale = Vector3.zero;
+            btnObj.transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack).SetDelay(i * 0.08f);
+        }
+    }
+
+    private System.Collections.IEnumerator StartCountdownTimer()
+    {
+        float timeLeft = 5f;
+
+        // Try to locate a text component inside the panel to show the timer
+        TMPro.TextMeshProUGUI countdownText = weaponSelectPanel.GetComponentInChildren<TMPro.TextMeshProUGUI>(true);
+        UnityEngine.UI.Text legacyText = null;
+        
+        // If we don't have a label for the countdown, create one!
+        if (countdownText == null)
+        {
+            GameObject timerTextObj = new GameObject("CountdownText");
+            timerTextObj.transform.SetParent(weaponSelectPanel.transform, false);
+            timerTextObj.transform.SetAsFirstSibling(); // Put it at the top
+            
+            RectTransform textRt = timerTextObj.AddComponent<RectTransform>();
+            textRt.sizeDelta = new Vector2(300f, 40f);
+            
+            timerTextObj.AddComponent<CanvasRenderer>();
+            countdownText = timerTextObj.AddComponent<TMPro.TextMeshProUGUI>();
+            countdownText.fontSize = 24;
+            countdownText.alignment = TMPro.TextAlignmentOptions.Center;
+            countdownText.color = new Color(1f, 0.8f, 0.2f); // Warm gold timer text
+        }
+
+        while (timeLeft > 0f)
+        {
+            string timerString = $"Time Remaining: {Mathf.CeilToInt(timeLeft)}s";
+            if (countdownText != null) countdownText.text = timerString;
+            else if (legacyText != null) legacyText.text = timerString;
+
+            yield return new WaitForSeconds(1f);
+            timeLeft -= 1f;
+        }
+
+        // Timer expired: auto-select Hammer (index 2)
+        if (!selectionMade)
+        {
+            Debug.Log("[ChestOpeningSequence] Time expired! Auto-selecting Hammer.");
+            SelectWeapon(2);
+        }
+    }
+
+    // Public method that buttons or local scripts can invoke to select the weapon
+    public void SelectWeapon(int weaponIndex)
+    {
+        if (selectionMade) return;
+        selectionMade = true;
+
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+
         SpawnAndEquipWeapon(weaponIndex);
     }
 
@@ -155,6 +291,14 @@ public class ChestOpeningSequence : MonoBehaviour
         // 1. Hide the selection panel
         if (weaponSelectPanel != null)
         {
+            // Destroy procedural elements so they can be clean next time
+            foreach (Transform child in weaponSelectPanel.transform)
+            {
+                if (child.name.StartsWith("Button_") || child.name == "CountdownText")
+                {
+                    Destroy(child.gameObject);
+                }
+            }
             weaponSelectPanel.SetActive(false);
         }
 
@@ -215,9 +359,9 @@ public class ChestOpeningSequence : MonoBehaviour
                     weaponObj = CreateProceduralHammer();
                 }
                 weaponObj.name = "Equipped_Hammer";
-                localOffsetPos = new Vector3(0.02f, 0.12f, -0.04f);
-                localOffsetRot = Quaternion.Euler(-90f, 0f, 0f);
-                targetEquipScale = new Vector3(0.15f, 0.15f, 0.15f); // Scale properly for sledgehammer mesh
+                localOffsetPos = new Vector3(0.03641049f, 0.08302949f, -0.0680940f);
+                localOffsetRot = Quaternion.Euler(-12.213f, -14.958f, -83.297f);
+                targetEquipScale = new Vector3(0.00286978f, 0.00286977f, 0.00286977f);
                 break;
             case 3: // Mini Stone
                 weaponObj = CreateProceduralStone(0.12f, new Color(0.45f, 0.45f, 0.45f));
@@ -251,13 +395,11 @@ public class ChestOpeningSequence : MonoBehaviour
         // Step A: Rise from chest and scale up
         Vector3 midAirPos = spawnPoint.position + Vector3.up * floatHeight;
         equipSeq.Append(weaponObj.transform.DOMove(midAirPos, 0.7f).SetEase(Ease.OutQuad));
-        equipSeq.Join(weaponObj.transform.DOScale(targetEquipScale * 1.3f, 0.7f).SetEase(Ease.OutBack)); // pop up and scale slightly bigger
+        equipSeq.Join(weaponObj.transform.DOScale(targetEquipScale * 1.3f, 0.7f).SetEase(Ease.OutBack));
         equipSeq.Join(weaponObj.transform.DORotate(new Vector3(0f, 360f, 45f), 0.7f, RotateMode.FastBeyond360).SetEase(Ease.OutQuad));
 
-        // Let it float for a brief split second
         equipSeq.AppendInterval(0.2f);
 
-        // Flight sparks
         equipSeq.AppendCallback(() => PlayFlightTrailVFX(midAirPos, playerHandTransform));
 
         // Step B: Fly smoothly and rotate into character's hand
@@ -323,7 +465,7 @@ public class ChestOpeningSequence : MonoBehaviour
         if (handleRenderer != null)
         {
             Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            mat.color = new Color(0.35f, 0.2f, 0.1f); // Wood/Brown
+            mat.color = new Color(0.35f, 0.2f, 0.1f);
             handleRenderer.material = mat;
         }
 
@@ -391,12 +533,11 @@ public class ChestOpeningSequence : MonoBehaviour
 
     private void PlayChestVFXEffects()
     {
-        // 1. Dynamic Point Light Glow inside the box
         GameObject lightObj = new GameObject("VFX_ChestGlowLight");
         lightObj.transform.position = spawnPoint.position;
         Light light = lightObj.AddComponent<Light>();
         light.type = LightType.Point;
-        light.color = new Color(1f, 0.7f, 0.2f); // Warm magical glow
+        light.color = new Color(1f, 0.7f, 0.2f);
         light.range = 0f;
         light.intensity = 0f;
 
@@ -409,7 +550,6 @@ public class ChestOpeningSequence : MonoBehaviour
                     .OnComplete(() => Destroy(lightObj));
             });
 
-        // 2. Spawn burst of 12 glowing particles (small spheres)
         for (int i = 0; i < 12; i++)
         {
             GameObject particle = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -458,7 +598,7 @@ public class ChestOpeningSequence : MonoBehaviour
                 if (renderer != null)
                 {
                     Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                    mat.color = new Color(0.2f, 0.7f, 1f); // Blue trail spark
+                    mat.color = new Color(0.2f, 0.7f, 1f);
                     mat.EnableKeyword("_EMISSION");
                     mat.SetColor("_EmissionColor", mat.color * 1.5f);
                     renderer.material = mat;
@@ -503,12 +643,10 @@ public class ChestOpeningSequence : MonoBehaviour
         Vector3 peakPosition = spawnedTool.transform.position;
         idleSequence = DOTween.Sequence();
 
-        // Loop A: Floating Yoyo
         idleSequence.Append(spawnedTool.transform.DOMoveY(peakPosition.y + floatRange, floatCycleDuration)
             .SetEase(Ease.InOutSine)
             .SetLoops(-1, LoopType.Yoyo));
 
-        // Loop B: Slow Spinning
         spawnedTool.transform.DORotate(new Vector3(0f, 360f, 0f), 360f / spinSpeed, RotateMode.FastBeyond360)
             .SetEase(Ease.Linear)
             .SetLoops(-1, LoopType.Incremental);
@@ -529,9 +667,9 @@ public class ChestOpeningSequence : MonoBehaviour
     {
         if (idleSequence != null) idleSequence.Kill();
         
-        if (slotMachineManager != null)
+        if (countdownCoroutine != null)
         {
-            slotMachineManager.OnWeaponSelected -= OnWeaponSelected;
+            StopCoroutine(countdownCoroutine);
         }
     }
 }

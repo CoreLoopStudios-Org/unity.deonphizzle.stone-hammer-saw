@@ -195,12 +195,12 @@ public class UIManager : MonoBehaviour
                 mobSquadLoadingBar.fillAmount = 0f;
                 mobSquadLoadingBar.DOFillAmount(1f, 3f).OnComplete(() =>
                 {
-                    UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("Mob Squad 3d world scene");
                 });
             }
             else
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob Squad 3d world scene");
             }
         }
         else
@@ -208,7 +208,7 @@ public class UIManager : MonoBehaviour
             // Fallback: use gameLoadingPanel
             StartGameSpecificLoading(() =>
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob-Squad-Scene");
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Mob Squad 3d world scene");
             });
         }
     }
