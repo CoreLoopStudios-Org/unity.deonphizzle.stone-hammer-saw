@@ -10,6 +10,8 @@ public class SlotMachineManager : MonoBehaviour
     public List<RectTransform> weaponItems;
     public GameObject highlightOverlay;
     
+    public event System.Action<int> OnWeaponSelected;
+    
     private bool isSpinning = true;
 
     void Start()
@@ -79,5 +81,7 @@ public class SlotMachineManager : MonoBehaviour
 
         if (GameplayController.Instance != null)
             GameplayController.Instance.SelectWeapon(index);
+
+        OnWeaponSelected?.Invoke(index);
     }
 }

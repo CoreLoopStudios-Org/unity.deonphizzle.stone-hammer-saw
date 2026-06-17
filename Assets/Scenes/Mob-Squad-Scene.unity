@@ -1468,6 +1468,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230892216}
   m_CullTransparentMesh: 1
+--- !u!114 &1230892220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230892216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TapToLoadScene
+  sceneToLoad: Mob Squad 3d world scene
 --- !u!1 &1383445221
 GameObject:
   m_ObjectHideFlags: 0
@@ -1711,19 +1724,6 @@ MonoBehaviour:
   currentPanel: {fileID: 1582699056}
   nextPanel: {fileID: 1230892216}
   waitDuration: 3
---- !u!114 &1230892220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1230892216}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6c1c4c8d5d4d3b648bc02cdd3e1431fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TapToLoadScene
-  sceneToLoad: Mob Squad 3d world scene
 --- !u!1 &1624958121
 GameObject:
   m_ObjectHideFlags: 0
@@ -2093,7 +2093,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1857412073
 RectTransform:
   m_ObjectHideFlags: 0
