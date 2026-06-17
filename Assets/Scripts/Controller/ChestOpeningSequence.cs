@@ -63,13 +63,44 @@ public class ChestOpeningSequence : MonoBehaviour
         {
             hammerPrefab = Resources.Load<GameObject>("SledgeHammer2");
         }
+
+        // Ensure the BoxCollider is marked as a trigger and has a generous size for reliable detection
+        BoxCollider boxCollider = GetComponent<BoxCollider>();
+        if (boxCollider != null)
+        {
+            boxCollider.isTrigger = true;
+            // Expand the size if it's too small (e.g. less than 1.8 in horizontal/vertical dimensions)
+            Vector3 size = boxCollider.size;
+            if (size.x < 1.8f) size.x = 1.8f;
+            if (size.y < 1.5f) size.y = 1.5f;
+            if (size.z < 1.8f) size.z = 1.8f;
+            boxCollider.size = size;
+            
+            // Adjust center slightly upwards so it triggers well at character body height
+            Vector3 center = boxCollider.center;
+            if (center.y < 0.2f) center.y = 0.4f;
+            boxCollider.center = center;
+            
+            Debug.Log($"[ChestOpeningSequence] BoxCollider trigger optimized. New size: {boxCollider.size}, center: {boxCollider.center}");
+        }
+    }
+
+    private bool IsSceneObject(GameObject go)
+    {
+        return go != null && go.scene.IsValid() && !string.IsNullOrEmpty(go.scene.name);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Trigger only when Pangopal_01 arrives and chest is closed
-        if (!isOpened && other.gameObject.name.Contains(targetCharacterName))
+        Debug.Log($"[ChestOpeningSequence] OnTriggerEnter triggered by: {other.gameObject.name} (Root: {other.transform.root.name})");
+        
+        // Check root and parents as well in case collider is on a nested child bone/component
+        bool nameMatches = other.gameObject.name.Contains(targetCharacterName) || 
+                           (other.transform.root != null && other.transform.root.name.Contains(targetCharacterName));
+
+        if (!isOpened && nameMatches)
         {
+            Debug.Log("[ChestOpeningSequence] Target character detected! Play opening sequence...");
             PlayOpeningSequence();
         }
     }
@@ -80,6 +111,7 @@ public class ChestOpeningSequence : MonoBehaviour
         if (isOpened) return;
         isOpened = true;
 
+        Debug.Log("[ChestOpeningSequence] PlayOpeningSequence started.");
         Vector3 originalBoxPos = chestBox.position;
 
         // Build DOTween Sequence
@@ -99,11 +131,8 @@ public class ChestOpeningSequence : MonoBehaviour
             // Play custom DOTween VFX (glow and burst spheres)
             PlayChestVFXEffects();
 
-            // Wait exactly 1.0 second before showing the selection panel
-            DOVirtual.DelayedCall(1.0f, () =>
-            {
-                ShowWeaponSelectPanel();
-            });
+            // Wait exactly 1.0 second before showing the selection panel using a coroutine for complete reliability
+            StartCoroutine(DelayedShowPanel(1.0f));
         });
 
         // Open chest lid
@@ -116,36 +145,93 @@ public class ChestOpeningSequence : MonoBehaviour
         openSeq.OnKill(() => chestBox.position = originalBoxPos);
     }
 
+    private System.Collections.IEnumerator DelayedShowPanel(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ShowWeaponSelectPanel();
+    }
+
     private void ShowWeaponSelectPanel()
     {
+        Debug.Log("[ChestOpeningSequence] ShowWeaponSelectPanel called.");
+
+        // If assigned, ensure it is a scene object and not a prefab asset
+        if (weaponSelectPanel != null && !IsSceneObject(weaponSelectPanel))
+        {
+            Debug.LogWarning("[ChestOpeningSequence] Assigned weaponSelectPanel was a prefab asset! Resetting to find the scene instance.");
+            weaponSelectPanel = null;
+        }
+
         // Find WeoponSelect-Panel dynamically in the scene if not explicitly assigned
         if (weaponSelectPanel == null)
         {
-            weaponSelectPanel = GameObject.Find("WeoponSelect-Panel");
+            // 1. Scan memory for scene GameObjects matching the name
+            foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (IsSceneObject(go))
+                {
+                    if (go.name == "WeoponSelect-Panel-Moiib Squad" || 
+                        go.name == "WeoponSelect-Panel" || 
+                        go.name == "Weapon-Select-Panel" || 
+                        go.name == "WeaponSelect-Panel")
+                    {
+                        weaponSelectPanel = go;
+                        Debug.Log($"[ChestOpeningSequence] Found panel object '{go.name}' in scene memory.");
+                        break;
+                    }
+                }
+            }
+
+            // 2. Fallback to Canvas transform lookup if not found
             if (weaponSelectPanel == null)
             {
-                weaponSelectPanel = GameObject.Find("WeoponSelect-Panel-Moiib Squad");
+                GameObject canvasGo = GameObject.Find("Canvas");
+                if (canvasGo != null)
+                {
+                    Transform panelTrans = canvasGo.transform.Find("WeoponSelect-Panel-Moiib Squad");
+                    if (panelTrans == null) panelTrans = canvasGo.transform.Find("WeoponSelect-Panel");
+                    if (panelTrans == null) panelTrans = canvasGo.transform.Find("Weapon-Select-Panel");
+                    
+                    if (panelTrans != null)
+                    {
+                        weaponSelectPanel = panelTrans.gameObject;
+                        Debug.Log($"[ChestOpeningSequence] Found panel object '{weaponSelectPanel.name}' under Canvas.");
+                    }
+                }
             }
         }
 
         if (weaponSelectPanel != null)
         {
+            Debug.Log($"[ChestOpeningSequence] Activating weaponSelectPanel '{weaponSelectPanel.name}' in scene.");
             weaponSelectPanel.SetActive(true);
             selectionMade = false;
+
+            // Make the panel background clickable to select the Hammer
+            UnityEngine.UI.Button panelBtn = weaponSelectPanel.GetComponent<UnityEngine.UI.Button>();
+            if (panelBtn == null)
+            {
+                panelBtn = weaponSelectPanel.AddComponent<UnityEngine.UI.Button>();
+            }
+            panelBtn.onClick.RemoveAllListeners();
+            panelBtn.onClick.AddListener(() => SelectWeapon(2)); // Default to Hammer on panel background click
 
             // Dynamically assign listeners to any UI Buttons on this panel
             UnityEngine.UI.Button[] buttons = weaponSelectPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true);
             
             // If the panel has no buttons, procedurally create them!
-            if (buttons.Length == 0)
+            if (buttons.Length == 0 || (buttons.Length == 1 && buttons[0] == panelBtn))
             {
                 CreateProceduralButtons(weaponSelectPanel);
             }
             else
             {
+                Debug.Log($"[ChestOpeningSequence] Panel has {buttons.Length} existing buttons. Hooking up select events...");
                 for (int i = 0; i < buttons.Length; i++)
                 {
                     int index = i; // local copy for closure
+                    if (buttons[i] == panelBtn) continue; // Skip panel background button
+                    
                     buttons[i].onClick.RemoveAllListeners();
                     buttons[i].onClick.AddListener(() => SelectWeapon(index));
                 }
@@ -157,7 +243,7 @@ public class ChestOpeningSequence : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[ChestOpeningSequence] WeoponSelect-Panel (Moiib Squad) not found in scene! Auto-selecting Hammer.");
+            Debug.LogError("[ChestOpeningSequence] WeoponSelect-Panel (Moiib Squad) NOT found in scene! Auto-selecting Hammer as fallback.");
             SelectWeapon(2); // Fallback to Hammer immediately
         }
     }

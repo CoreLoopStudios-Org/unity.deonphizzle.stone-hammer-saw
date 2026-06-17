@@ -754,7 +754,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &214905432
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5539,7 +5539,6 @@ MonoBehaviour:
   spinSpeed: 40
   openParticleSystem: {fileID: 0}
   weaponSelectPanel: {fileID: 0}
-  slotMachineManager: {fileID: 0}
   hammerPrefab: {fileID: 0}
   playerHandTransform: {fileID: 0}
 --- !u!114 &3469287838262622799
@@ -5554,12 +5553,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 903526d80a26a2340ae80e11c0b870db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChestLootController
-  chestLid: {fileID: 0}
-  chestBody: {fileID: 0}
-  toolPrefab: {fileID: 0}
-  spawnPoint: {fileID: 0}
-  glowParticles: {fileID: 0}
-  _isOpened: 0
 --- !u!65 &3469287838262622800
 BoxCollider:
   m_ObjectHideFlags: 0
