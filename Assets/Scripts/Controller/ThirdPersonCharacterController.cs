@@ -19,8 +19,13 @@ public class ThirdPersonCharacterController : MonoBehaviour
     public float minPitch = -20f;           
     public float maxPitch = 60f;            
     
+    [Header("UI Block Settings")]
+    public RectTransform touchBlockPanel; // Inspector-এ Controller Background প্যানেলটি টেনে দেওয়ার জন্য
+    
     [Header("Camera Manual Control")]
     public float cameraRotationX_Offset = 0f;
+
+    private bool startedDragOnUI = false; // টাচ UI-তে শুরু হয়েছে কিনা চেক করার ভেরিয়েবল
 
     private CharacterController controller;
     private Animator animator;
@@ -110,12 +115,6 @@ public class ThirdPersonCharacterController : MonoBehaviour
         {
             float speedParam = inputDir.magnitude > 0.05f ? (isRunning ? 1f : 0.5f) : 0f;
             animator.SetFloat("Speed", speedParam, 0.15f, Time.deltaTime);
-            
-            // পিসিতে টেস্ট করার জন্য মাউসের লেফট ক্লিক চাপলেও অ্যাটাক করবে
-            if (Input.GetMouseButtonDown(0) && Input.mousePosition.x < Screen.width / 2.5f)
-            {
-               // OnAttackButtonClicked();
-            }
         }
 
         HandleCameraInput();
@@ -139,73 +138,87 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
     private void HandleCameraInput()
     {
-        Vector2 currentTouchPos = Vector2.zero;
-        bool inputDetected = false;
-
         // --- মোবাইলের টাচ কন্ট্রোল ---
         if (Input.touchCount > 0)
         {
-            foreach (Touch touch in Input.touches)
+            Touch touch = Input.GetTouch(0); 
+
+            if (touch.phase == TouchPhase.Began)
             {
-                // নতুন লজিক: যদি টাচটি কোনো UI (যেমন জয়স্টিকের ব্যাকগ্রাউন্ড) এর ওপর পড়ে, তবে ক্যামেরা ঘুরবে না
-                if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                // প্যানেলের ভেতরে টাচ পড়েছে কিনা চেক করা
+                bool isTouchInPanel = false;
+                if (touchBlockPanel != null)
                 {
-                    continue; // এই টাচটি ইগনোর করে লুপের পরের কাজে চলে যাবে
+                    isTouchInPanel = RectTransformUtility.RectangleContainsScreenPoint(touchBlockPanel, touch.position, null);
                 }
 
-                if (touch.position.x > Screen.width / 2.5f)
+                // লজিক: টাচ যদি অ্যাসাইন করা প্যানেলে, অন্য UI-তে, অথবা স্ক্রিনের বাম পাশে শুরু হয়
+                if (isTouchInPanel || EventSystem.current.IsPointerOverGameObject(touch.fingerId) || touch.position.x < Screen.width / 2.5f)
                 {
-                    if (touch.phase == TouchPhase.Began)
-                    {
-                        lastTouchPosition = touch.position;
-                        isDraggingCamera = true;
-                    }
-                    else if (touch.phase == TouchPhase.Moved && isDraggingCamera)
-                    {
-                        currentTouchPos = touch.position;
-                        inputDetected = true;
-                    }
-                    else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-                    {
-                        isDraggingCamera = false;
-                    }
-                    break; 
+                    startedDragOnUI = true;  // UI তে টাচ শুরু হয়েছে, তাই ক্যামেরা ঘুরবে না
+                    isDraggingCamera = false;
+                }
+                else
+                {
+                    startedDragOnUI = false;
+                    isDraggingCamera = true;
+                    lastTouchPosition = touch.position;
                 }
             }
-        }
-        // --- পিসির মাউস কন্ট্রোল ---
-        else if (Input.GetMouseButton(0))
-        {
-            // নতুন লজিক: মাউস ক্লিক যদি কোনো UI এর ওপর থাকে, তবে ক্যামেরা ঘুরবে না
-            if (!EventSystem.current.IsPointerOverGameObject())
+            else if (touch.phase == TouchPhase.Moved && isDraggingCamera && !startedDragOnUI)
             {
-                if (Input.mousePosition.x > Screen.width / 2.5f)
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        lastTouchPosition = Input.mousePosition;
-                        isDraggingCamera = true;
-                    }
-                    else if (isDraggingCamera)
-                    {
-                        currentTouchPos = Input.mousePosition;
-                        inputDetected = true;
-                    }
-                }
+                // শুধু তখনই ক্যামেরা ঘুরবে যদি টাচ UI বা বাম পাশে শুরু না হয়ে থাকে
+                Vector2 delta = touch.position - lastTouchPosition;
+                yaw += delta.x * touchSensitivity;
+                pitch -= delta.y * touchSensitivity; 
+                pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
+                lastTouchPosition = touch.position; 
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                isDraggingCamera = false;
+                startedDragOnUI = false;
             }
         }
-        else if (Input.GetMouseButtonUp(0))
+        // --- পিসির মাউস কন্ট্রোল (টেস্ট করার জন্য) ---
+        else 
         {
-            isDraggingCamera = false;
-        }
+            if (Input.GetMouseButtonDown(0))
+            {
+                // প্যানেলের ভেতরে মাউস ক্লিক পড়েছে কিনা চেক করা
+                bool isMouseInPanel = false;
+                if (touchBlockPanel != null)
+                {
+                    isMouseInPanel = RectTransformUtility.RectangleContainsScreenPoint(touchBlockPanel, Input.mousePosition, null);
+                }
 
-        if (inputDetected && isDraggingCamera)
-        {
-            Vector2 delta = currentTouchPos - lastTouchPosition;
-            yaw += delta.x * touchSensitivity;
-            pitch -= delta.y * touchSensitivity; 
-            pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
-            lastTouchPosition = currentTouchPos; 
+                // মাউস ক্লিক যদি অ্যাসাইন করা প্যানেলে, অন্য UI-তে বা স্ক্রিনের বামে হয়
+                if (isMouseInPanel || EventSystem.current.IsPointerOverGameObject() || Input.mousePosition.x < Screen.width / 2.5f)
+                {
+                    startedDragOnUI = true;
+                    isDraggingCamera = false;
+                }
+                else
+                {
+                    startedDragOnUI = false;
+                    isDraggingCamera = true;
+                    lastTouchPosition = Input.mousePosition;
+                }
+            }
+            else if (Input.GetMouseButton(0) && isDraggingCamera && !startedDragOnUI)
+            {
+                Vector2 currentTouchPos = Input.mousePosition;
+                Vector2 delta = currentTouchPos - lastTouchPosition;
+                yaw += delta.x * touchSensitivity;
+                pitch -= delta.y * touchSensitivity; 
+                pitch = Mathf.Clamp(pitch, minPitch, maxPitch); 
+                lastTouchPosition = currentTouchPos; 
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                isDraggingCamera = false;
+                startedDragOnUI = false;
+            }
         }
     }
     

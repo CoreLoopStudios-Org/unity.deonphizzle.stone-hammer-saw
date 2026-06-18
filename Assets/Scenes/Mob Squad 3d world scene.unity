@@ -6592,6 +6592,7 @@ MonoBehaviour:
   cameraHeight: 1.95
   minPitch: -20
   maxPitch: 60
+  touchBlockPanel: {fileID: 2146227601}
   cameraRotationX_Offset: 0
 --- !u!143 &5709256303530233765
 CharacterController:
