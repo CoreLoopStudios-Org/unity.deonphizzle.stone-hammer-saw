@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems; 
 
 [RequireComponent(typeof(CharacterController))]
 public class ThirdPersonCharacterController : MonoBehaviour
@@ -128,7 +129,6 @@ public class ThirdPersonCharacterController : MonoBehaviour
         }
     }
 
-    // --- নতুন ফাংশন: Attack বাটন থেকে কল করার জন্য ---
     public void OnAttackButtonClicked()
     {
         if (animator != null)
@@ -142,10 +142,17 @@ public class ThirdPersonCharacterController : MonoBehaviour
         Vector2 currentTouchPos = Vector2.zero;
         bool inputDetected = false;
 
+        // --- মোবাইলের টাচ কন্ট্রোল ---
         if (Input.touchCount > 0)
         {
             foreach (Touch touch in Input.touches)
             {
+                // নতুন লজিক: যদি টাচটি কোনো UI (যেমন জয়স্টিকের ব্যাকগ্রাউন্ড) এর ওপর পড়ে, তবে ক্যামেরা ঘুরবে না
+                if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    continue; // এই টাচটি ইগনোর করে লুপের পরের কাজে চলে যাবে
+                }
+
                 if (touch.position.x > Screen.width / 2.5f)
                 {
                     if (touch.phase == TouchPhase.Began)
@@ -166,19 +173,24 @@ public class ThirdPersonCharacterController : MonoBehaviour
                 }
             }
         }
+        // --- পিসির মাউস কন্ট্রোল ---
         else if (Input.GetMouseButton(0))
         {
-            if (Input.mousePosition.x > Screen.width / 2.5f)
+            // নতুন লজিক: মাউস ক্লিক যদি কোনো UI এর ওপর থাকে, তবে ক্যামেরা ঘুরবে না
+            if (!EventSystem.current.IsPointerOverGameObject())
             {
-                if (Input.GetMouseButtonDown(0))
+                if (Input.mousePosition.x > Screen.width / 2.5f)
                 {
-                    lastTouchPosition = Input.mousePosition;
-                    isDraggingCamera = true;
-                }
-                else if (isDraggingCamera)
-                {
-                    currentTouchPos = Input.mousePosition;
-                    inputDetected = true;
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        lastTouchPosition = Input.mousePosition;
+                        isDraggingCamera = true;
+                    }
+                    else if (isDraggingCamera)
+                    {
+                        currentTouchPos = Input.mousePosition;
+                        inputDetected = true;
+                    }
                 }
             }
         }
