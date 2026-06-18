@@ -49,7 +49,7 @@ Controlled by the [ThirdPersonCameraController.cs](file:///C:/Users/User/Documen
 *   **Smooth Time:** `0.12`
 
 ### 3.3 Screen Orientation Control
-Both scenes run [SceneOrientationController.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/SceneOrientationController.cs) attached to `OrientationController`. This locks the game screen to `LandscapeLeft` on launch and restores it to `Portrait` when exiting the sandbox.
+Both scenes run [SceneOrientationController.cs](file:///C:/Users/User/Documents/GitHub/unity.deonphizzle.stone-hammer-saw/Assets/Scripts/Controller/SceneOrientationController.cs) attached to `OrientationController`. This locks the game screen to `Portrait` on launch and keeps it in `Portrait` when exiting the sandbox.
 
 ---
 
