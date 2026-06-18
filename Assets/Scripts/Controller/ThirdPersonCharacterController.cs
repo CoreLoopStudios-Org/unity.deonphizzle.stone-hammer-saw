@@ -53,15 +53,32 @@ public class ThirdPersonCharacterController : MonoBehaviour
 
     private void Update()
     {
-        float horizontal = SimpleMobileJoystick.InputDirection.x;
-        float vertical = SimpleMobileJoystick.InputDirection.y;
-        bool isRunning = SimpleMobileJoystick.InputDirection.magnitude > 0.7f; 
+        float horizontal = 0f;
+        float vertical = 0f;
+        bool isRunning = false;
 
-        if (horizontal == 0 && vertical == 0)
+        bool canMove = true;
+        SquidGameManager squidGM = FindObjectOfType<SquidGameManager>();
+        if (squidGM != null)
         {
-            horizontal = Input.GetAxis("Horizontal");
-            vertical = Input.GetAxis("Vertical");
-            isRunning = Input.GetKey(KeyCode.LeftShift);
+            if (squidGM.isGameOver || squidGM.isCountdownActive || !squidGM.isGameStarted)
+            {
+                canMove = false;
+            }
+        }
+
+        if (canMove)
+        {
+            horizontal = SimpleMobileJoystick.InputDirection.x;
+            vertical = SimpleMobileJoystick.InputDirection.y;
+            isRunning = SimpleMobileJoystick.InputDirection.magnitude > 0.7f; 
+
+            if (horizontal == 0 && vertical == 0)
+            {
+                horizontal = Input.GetAxis("Horizontal");
+                vertical = Input.GetAxis("Vertical");
+                isRunning = Input.GetKey(KeyCode.LeftShift);
+            }
         }
 
         Vector3 inputDir = new Vector3(horizontal, 0f, vertical);

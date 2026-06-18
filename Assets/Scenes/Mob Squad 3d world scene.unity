@@ -1203,8 +1203,8 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 358658545}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 177.77779}
-  m_LocalScale: {x: 0.03845249, y: 0.03845249, z: 0.03845249}
+  m_LocalPosition: {x: 0, y: 0, z: 177.77782}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1383445222}
@@ -1213,8 +1213,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -960.00006, y: -2026.6669}
-  m_SizeDelta: {x: -868.8053, y: -1834.1443}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &358658547
 MonoBehaviour:
@@ -2821,11 +2821,11 @@ MonoBehaviour:
   yMaxLimit: 60
   autoAlignSpeed: 3
   autoAlignDelay: 1.5
+  touchBlockPanel: {fileID: 2146227601}
   smoothTime: 0.12
   x: 0
   y: 0
   overrideStartRotation: 0
-  touchBlockPanel: {fileID: 2146227601}
 --- !u!1001 &1054935180
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5598,11 +5598,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d189e5638b3c4254e8d9766c56b3b106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SquidGameManager
-  timeLimit: 100
+  timeLimit: 60
   dollMusic: {fileID: 2117154450}
   reactionTime: 0.5
-  isGreenLight: 1
+  tapToPlayPanel: {fileID: 1230892216}
+  gameOverPanel: {fileID: 358658545}
+  isGreenLight: 0
   isGameOver: 0
+  isGameStarted: 0
+  isCountdownActive: 0
 --- !u!4 &2117154452
 Transform:
   m_ObjectHideFlags: 0
@@ -7625,7 +7629,7 @@ Transform:
   m_GameObject: {fileID: 5709256303530233763}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9999592, z: -0, w: 0.009046056}
-  m_LocalPosition: {x: -1663.92, y: -0.06559199, z: -4.92}
+  m_LocalPosition: {x: -1688, y: -0.06559199, z: 103.2}
   m_LocalScale: {x: 1.7576625, y: 1.7576625, z: 1.7576625}
   m_ConstrainProportionsScale: 0
   m_Children:
