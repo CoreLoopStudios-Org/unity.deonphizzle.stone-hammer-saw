@@ -42,6 +42,10 @@ public class ThirdPersonCameraController : MonoBehaviour
     private float lastDragTime = 0f;
     private bool isDragging = false;
 
+    [Header("UI Block Settings")]
+    public RectTransform touchBlockPanel;
+    private bool startedDragOnUI = false;
+
     [Header("Smoothing")]
     public float smoothTime = 0.12f;
 
@@ -90,8 +94,27 @@ public class ThirdPersonCameraController : MonoBehaviour
         // Mouse inputs for PC / Editor testing
         if (Input.GetMouseButton(0))
         {
-            // Verify we aren't clicking on a UI element (like the virtual joystick)
-            if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
+            if (Input.GetMouseButtonDown(0))
+            {
+                bool isMouseInPanel = false;
+                if (touchBlockPanel != null)
+                {
+                    isMouseInPanel = RectTransformUtility.RectangleContainsScreenPoint(touchBlockPanel, Input.mousePosition, null);
+                }
+
+                if (isMouseInPanel || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()))
+                {
+                    startedDragOnUI = true;
+                    isDragging = false;
+                }
+                else
+                {
+                    startedDragOnUI = false;
+                    isDragging = true;
+                }
+            }
+
+            if (isDragging && !startedDragOnUI)
             {
                 deltaX = Input.GetAxis("Mouse X") * xSpeed * 0.02f;
                 deltaY = Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
@@ -102,16 +125,42 @@ public class ThirdPersonCameraController : MonoBehaviour
         else if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
-            if (touch.phase == UnityEngine.TouchPhase.Moved)
+            if (touch.phase == UnityEngine.TouchPhase.Began)
             {
-                // Verify touch is not over a UI element (like the joystick)
-                if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                bool isTouchInPanel = false;
+                if (touchBlockPanel != null)
                 {
-                    deltaX = touch.deltaPosition.x * xSpeed * 0.005f;
-                    deltaY = touch.deltaPosition.y * ySpeed * 0.005f;
-                    inputDetected = true;
+                    isTouchInPanel = RectTransformUtility.RectangleContainsScreenPoint(touchBlockPanel, touch.position, null);
+                }
+
+                if (isTouchInPanel || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(touch.fingerId)))
+                {
+                    startedDragOnUI = true;
+                    isDragging = false;
+                }
+                else
+                {
+                    startedDragOnUI = false;
+                    isDragging = true;
                 }
             }
+
+            if (touch.phase == UnityEngine.TouchPhase.Moved && isDragging && !startedDragOnUI)
+            {
+                deltaX = touch.deltaPosition.x * xSpeed * 0.005f;
+                deltaY = touch.deltaPosition.y * ySpeed * 0.005f;
+                inputDetected = true;
+            }
+            else if (touch.phase == UnityEngine.TouchPhase.Ended || touch.phase == UnityEngine.TouchPhase.Canceled)
+            {
+                isDragging = false;
+                startedDragOnUI = false;
+            }
+        }
+        else
+        {
+            isDragging = false;
+            startedDragOnUI = false;
         }
 
         // Scroll zoom inputs
