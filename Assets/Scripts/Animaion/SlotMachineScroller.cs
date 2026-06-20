@@ -31,6 +31,7 @@ public class SlotMachineScroller : MonoBehaviour
     public float dimAlpha = 0.75f;
     public float selectScaleMultiplier = 1.8f;
     public float selectTweenDuration = 0.5f;
+    [SerializeField] private UISpinParticleController spinParticleController;
 
     private bool isWholeMachineSpinning = false;
     private GameObject dimOverlay;
@@ -50,6 +51,7 @@ public class SlotMachineScroller : MonoBehaviour
     private Vector2 originalAnchorMin;
     private Vector2 originalAnchorMax;
     private Vector2 originalPivot;
+    private bool needsResetSelectionOnEnable = false;
 
     // গেম শুরু হওয়ার সময় একবার পজিশনগুলো সেভ করে রাখা
     void Awake()
@@ -85,6 +87,12 @@ public class SlotMachineScroller : MonoBehaviour
     // প্যানেল ওপেন বা Active হওয়ার সাথে সাথেই এই মেথড কল হবে
     void OnEnable()
     {
+        if (needsResetSelectionOnEnable)
+        {
+            ResetSelection();
+            needsResetSelectionOnEnable = false;
+        }
+
         StartArrowAnimation();
 
         // যদি আগে থেকে স্পিন না চলতে থাকে, তাহলে অটোমেটিক স্পিন শুরু করবে
@@ -112,7 +120,10 @@ public class SlotMachineScroller : MonoBehaviour
         if (arrowSequenceTween != null) arrowSequenceTween.Kill();
         DOTween.Kill("GlowPulse");
         
-        ResetSelection();
+        if (currentlySelectedImage != null)
+        {
+            needsResetSelectionOnEnable = true;
+        }
     }
 
     void Update()
@@ -143,6 +154,8 @@ public class SlotMachineScroller : MonoBehaviour
     private IEnumerator SpinRoutine()
     {
         isWholeMachineSpinning = true;
+
+        if (spinParticleController != null) spinParticleController.PlayParticles();
 
         // Reset previous selection UI if active
         ResetSelection();
@@ -176,6 +189,7 @@ public class SlotMachineScroller : MonoBehaviour
         }
 
         // 3. Staggered sequential stop
+        if (spinParticleController != null) spinParticleController.StopParticles();
         for (int c = 0; c < columns.Length; c++)
         {
             var col = columns[c];
