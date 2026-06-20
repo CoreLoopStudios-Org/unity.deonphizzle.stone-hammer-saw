@@ -4991,6 +4991,7 @@ MonoBehaviour:
   arrowImages:
   - {fileID: 1759756181}
   - {fileID: 393139609}
+  - {fileID: 486615297}
   arrowAnimationSpeed: 0.5
   dimAlpha: 0.75
   selectScaleMultiplier: 1.8

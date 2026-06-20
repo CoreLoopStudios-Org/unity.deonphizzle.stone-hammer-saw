@@ -37,7 +37,17 @@ public class SlotMachineScroller : MonoBehaviour
     private Canvas addedCanvas;
     private UnityEngine.UI.GraphicRaycaster addedRaycaster;
     private RectTransform currentlySelectedImage;
+    private Vector3 currentlySelectedImageOriginalScale = Vector3.one;
     private Vector3[] arrowOriginalScales;
+
+    // Cache original parent hierarchy values to restore on spin reset
+    private Transform originalParent;
+    private int originalSiblingIndex;
+    private Vector2 originalAnchoredPosition;
+    private Vector3 originalLocalScale;
+    private Vector2 originalAnchorMin;
+    private Vector2 originalAnchorMax;
+    private Vector2 originalPivot;
 
     void Start()
     {
@@ -261,6 +271,15 @@ public class SlotMachineScroller : MonoBehaviour
         if (bestImage == null) return;
         currentlySelectedImage = bestImage;
 
+        // Cache original values before parent switch
+        originalParent = bestImage.parent;
+        originalSiblingIndex = bestImage.GetSiblingIndex();
+        originalAnchoredPosition = bestImage.anchoredPosition;
+        originalLocalScale = bestImage.localScale;
+        originalAnchorMin = bestImage.anchorMin;
+        originalAnchorMax = bestImage.anchorMax;
+        originalPivot = bestImage.pivot;
+
         // 1. Create dim overlay
         dimOverlay = new GameObject("DimOverlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(UnityEngine.UI.Image));
         dimOverlay.transform.SetParent(this.transform.parent, false);
@@ -275,18 +294,37 @@ public class SlotMachineScroller : MonoBehaviour
         imgComp.color = new Color(0, 0, 0, 0);
         imgComp.DOColor(new Color(0, 0, 0, dimAlpha), selectTweenDuration);
 
-        // 2. Bring selected image to the front using Canvas override
+        // Implementation of 5-step centering fix:
+        // 1. Store the bestImage.position (world position) in a temporary variable.
+        Vector3 storedWorldPosition = bestImage.position;
+
+        // 2. Reparent the bestImage to this.transform.parent (using worldPositionStays: true).
+        bestImage.SetParent(this.transform.parent, true);
+
+        // 3. Set bestImage.anchorMin, bestImage.anchorMax, and bestImage.pivot all to new Vector2(0.5f, 0.5f).
+        bestImage.anchorMin = new Vector2(0.5f, 0.5f);
+        bestImage.anchorMax = new Vector2(0.5f, 0.5f);
+        bestImage.pivot = new Vector2(0.5f, 0.5f);
+
+        // 4. Immediately re-apply the stored world position so the image doesn't visually jump when the anchors change.
+        bestImage.position = storedWorldPosition;
+
+        // Cache scale converted to the panel's uniform space
+        currentlySelectedImageOriginalScale = bestImage.localScale;
+
+        // 3. Bring selected image to the front using Canvas override
         addedCanvas = bestImage.gameObject.AddComponent<Canvas>();
         addedCanvas.overrideSorting = true;
         addedCanvas.sortingOrder = 105;
 
         addedRaycaster = bestImage.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
-        // 3. Play pop-up animation (scale and rotation)
-        bestImage.DOScale(selectScaleMultiplier, selectTweenDuration).SetEase(Ease.OutBack);
+        // 5. Animate to the center (0, 0), scale, and rotate in uniform space
+        bestImage.DOAnchorPos(Vector2.zero, selectTweenDuration).SetEase(Ease.OutBack);
+        bestImage.DOScale(currentlySelectedImageOriginalScale * selectScaleMultiplier, selectTweenDuration).SetEase(Ease.OutBack);
         bestImage.DORotate(new Vector3(0, 0, 360f), selectTweenDuration, RotateMode.FastBeyond360).SetEase(Ease.OutQuad);
 
-        // 4. Cyan glow pulse loop effect
+        // 5. Cyan glow pulse loop effect
         var neonColor = new Color(0f, 1f, 1f, 1f); // Neon Cyan
         var weaponImage = bestImage.GetComponent<UnityEngine.UI.Image>();
         if (weaponImage != null)
@@ -308,9 +346,20 @@ public class SlotMachineScroller : MonoBehaviour
                 weaponImage.color = Color.white;
             }
 
-            // Restore scale and rotation
-            currentlySelectedImage.DOScale(1f, 0.3f);
-            currentlySelectedImage.DORotate(Vector3.zero, 0.3f);
+            // Kill any active tweens on the image
+            currentlySelectedImage.DOKill();
+
+            // Reparent back to original column parent
+            currentlySelectedImage.SetParent(originalParent, true);
+            currentlySelectedImage.SetSiblingIndex(originalSiblingIndex);
+
+            // Restore original local values and anchors/pivot
+            currentlySelectedImage.anchorMin = originalAnchorMin;
+            currentlySelectedImage.anchorMax = originalAnchorMax;
+            currentlySelectedImage.pivot = originalPivot;
+            currentlySelectedImage.anchoredPosition = originalAnchoredPosition;
+            currentlySelectedImage.localRotation = Quaternion.identity;
+            currentlySelectedImage.localScale = originalLocalScale;
 
             // Destroy components added for rendering overlay sorting
             if (addedRaycaster != null) Destroy(addedRaycaster);
