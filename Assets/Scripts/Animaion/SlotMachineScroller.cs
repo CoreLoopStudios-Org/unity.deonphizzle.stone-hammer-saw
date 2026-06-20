@@ -25,7 +25,8 @@ public class SlotMachineScroller : MonoBehaviour
     [Header("Arrows (Upper Bg Panel)")]
     public RectTransform[] arrowImages; // Drag Arrow Left, Arrow Mid, Arrow Right
     public float arrowAnimationSpeed = 0.5f;
-
+    public float arrowMoveDistance = 30f;
+    
     [Header("Selection & VFX")]
     public float dimAlpha = 0.75f;
     public float selectScaleMultiplier = 1.8f;
@@ -39,6 +40,7 @@ public class SlotMachineScroller : MonoBehaviour
     private RectTransform currentlySelectedImage;
     private Vector3 currentlySelectedImageOriginalScale = Vector3.one;
     private Vector3[] arrowOriginalScales;
+    private float[] arrowOriginalYPositions;
 
     // Cache original parent hierarchy values to restore on spin reset
     private Transform originalParent;
@@ -68,11 +70,13 @@ public class SlotMachineScroller : MonoBehaviour
         if (arrowImages != null && arrowImages.Length > 0)
         {
             arrowOriginalScales = new Vector3[arrowImages.Length];
+            arrowOriginalYPositions = new float[arrowImages.Length];
             for (int i = 0; i < arrowImages.Length; i++)
             {
                 if (arrowImages[i] != null)
                 {
                     arrowOriginalScales[i] = arrowImages[i].localScale;
+                    arrowOriginalYPositions[i] = arrowImages[i].anchoredPosition.y;
                 }
             }
         }
@@ -228,7 +232,7 @@ public class SlotMachineScroller : MonoBehaviour
 
     private void StartArrowAnimation()
     {
-        if (arrowImages == null || arrowImages.Length == 0 || arrowOriginalScales == null) return;
+        if (arrowImages == null || arrowImages.Length == 0 || arrowOriginalScales == null || arrowOriginalYPositions == null) return;
         
         // আগে কোনো এনিমেশন চলতে থাকলে সেটা বন্ধ করে দেওয়া
         if (arrowSequenceTween != null) arrowSequenceTween.Kill();
@@ -240,19 +244,44 @@ public class SlotMachineScroller : MonoBehaviour
             if (arrowImages[i] == null) continue;
             RectTransform arrow = arrowImages[i];
             Vector3 originalScale = arrowOriginalScales[i];
+            float originalY = arrowOriginalYPositions[i];
             
             // Pulse scale and local position downwards
-            float originalY = arrow.anchoredPosition.y;
             seq.Insert(i * 0.2f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
-            seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - 12f, 0.3f).SetLoops(2, LoopType.Yoyo));
+            seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
         }
 
         seq.SetLoops(-1);
         arrowSequenceTween = seq;
     }
 
+    private void StopAndResetArrows()
+    {
+        if (arrowSequenceTween != null)
+        {
+            arrowSequenceTween.Kill();
+        }
+
+        if (arrowImages != null && arrowOriginalScales != null && arrowOriginalYPositions != null)
+        {
+            for (int i = 0; i < arrowImages.Length; i++)
+            {
+                if (arrowImages[i] != null)
+                {
+                    // Kill any active tweens on individual arrows
+                    arrowImages[i].DOKill();
+                    // Smoothly snap back in 0.2s using DOTween
+                    arrowImages[i].DOScale(arrowOriginalScales[i], 0.2f);
+                    arrowImages[i].DOAnchorPosY(arrowOriginalYPositions[i], 0.2f);
+                }
+            }
+        }
+    }
+
     private void SelectWeapon()
     {
+        StopAndResetArrows();
+
         // Select the center item of columns[1] (middle column)
         if (columns == null || columns.Length <= 1) return;
         var middleCol = columns[1];

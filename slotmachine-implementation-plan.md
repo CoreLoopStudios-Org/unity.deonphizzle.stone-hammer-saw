@@ -245,12 +245,12 @@ for (int i = 0; i < col.slotImages.Length; i++)
 > **Hierarchy Double-Space Bug**
 > The third arrow GameObject in the hierarchy is named `"Arrow  Right"` (containing a double space between the words). Regular string checks searching for `"Arrow Right"` failed to bind the reference, causing the right arrow to remain static and ruining the visual balance.
 
-To correct this, the setup scripts inspect string elements and support both naming patterns. Additionally, caching original arrow scales before animating prevents cumulative aspect ratio degradation:
+To correct this, the setup scripts inspect string elements and support both naming patterns. Additionally, caching original arrow scales and Y positions before animating prevents cumulative aspect ratio degradation and visual drift. Upon weapon selection, the arrows stop animating and smoothly snap back to their default shapes and positions.
 
 ```csharp
 private void StartArrowAnimation()
 {
-    if (arrowImages == null || arrowImages.Length == 0 || arrowOriginalScales == null) return;
+    if (arrowImages == null || arrowImages.Length == 0 || arrowOriginalScales == null || arrowOriginalYPositions == null) return;
 
     Sequence seq = DOTween.Sequence();
     for (int i = 0; i < arrowImages.Length; i++)
@@ -258,14 +258,35 @@ private void StartArrowAnimation()
         if (arrowImages[i] == null) continue;
         RectTransform arrow = arrowImages[i];
         Vector3 originalScale = arrowOriginalScales[i];
+        float originalY = arrowOriginalYPositions[i];
         
-        float originalY = arrow.anchoredPosition.y;
         seq.Insert(i * 0.2f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
-        seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - 12f, 0.3f).SetLoops(2, LoopType.Yoyo));
+        seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
     }
 
     seq.SetLoops(-1);
     arrowSequenceTween = seq;
+}
+
+private void StopAndResetArrows()
+{
+    if (arrowSequenceTween != null)
+    {
+        arrowSequenceTween.Kill();
+    }
+
+    if (arrowImages != null && arrowOriginalScales != null && arrowOriginalYPositions != null)
+    {
+        for (int i = 0; i < arrowImages.Length; i++)
+        {
+            if (arrowImages[i] != null)
+            {
+                arrowImages[i].DOKill();
+                arrowImages[i].DOScale(arrowOriginalScales[i], 0.2f);
+                arrowImages[i].DOAnchorPosY(arrowOriginalYPositions[i], 0.2f);
+            }
+        }
+    }
 }
 ```
 
