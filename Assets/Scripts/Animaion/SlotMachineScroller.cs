@@ -25,7 +25,7 @@ public class SlotMachineScroller : MonoBehaviour
     [Header("Arrows (Upper Bg Panel)")]
     public RectTransform[] arrowImages; // Drag Arrow Left, Arrow Mid, Arrow Right
     public float arrowAnimationSpeed = 0.5f;
-    public float arrowMoveDistance = 30f;
+    public float arrowMoveDistance = 35f;
     
     [Header("Selection & VFX")]
     public float dimAlpha = 0.75f;
@@ -247,8 +247,8 @@ public class SlotMachineScroller : MonoBehaviour
             float originalY = arrowOriginalYPositions[i];
             
             // Pulse scale and local position downwards
-            seq.Insert(i * 0.2f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
-            seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
+            seq.Insert(0f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
+            seq.Insert(0f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
         }
 
         seq.SetLoops(-1);

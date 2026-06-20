@@ -83,6 +83,7 @@ The `WeaponSelect manager` exposes the following settings in the Inspector to co
 | **Reset Position Y** | `float` | `300.0` | Target upper coordinate to reset wrapped slot images to (minus overshoot). |
 | **Arrow Images** | `RectTransform[]` | Array of 3 | References to `Arrow Left`, `Arrow Mid`, and `Arrow  Right` in `Upper-Bg`. |
 | **Arrow Animation Speed** | `float` | `0.5` | Cycle duration of the sequential pulsing arrow wave. |
+| **Arrow Move Distance** | `float` | `35.0` | Vertical downward displacement distance for each arrow during animation. |
 | **Dim Alpha** | `float` | `0.75` | Target transparency of the dark background overlay upon weapon selection. |
 | **Select Scale Multiplier**| `float` | `1.8` | Size multiplier applied to the selected weapon in uniform parent space. |
 | **Select Tween Duration** | `float` | `0.5` | Duration of the center fly-in, scale, and rotate animations. |
@@ -260,8 +261,8 @@ private void StartArrowAnimation()
         Vector3 originalScale = arrowOriginalScales[i];
         float originalY = arrowOriginalYPositions[i];
         
-        seq.Insert(i * 0.2f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
-        seq.Insert(i * 0.2f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
+        seq.Insert(0f, arrow.DOScale(originalScale * 1.3f, 0.3f).SetLoops(2, LoopType.Yoyo));
+        seq.Insert(0f, arrow.DOAnchorPosY(originalY - arrowMoveDistance, 0.3f).SetLoops(2, LoopType.Yoyo));
     }
 
     seq.SetLoops(-1);
