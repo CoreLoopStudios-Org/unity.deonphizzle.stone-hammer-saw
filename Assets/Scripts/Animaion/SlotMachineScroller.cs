@@ -64,7 +64,7 @@ public class SlotMachineScroller : MonoBehaviour
                 }
             }
             // Set initial speed to start spinning like before
-            col.currentSpeed = targetScrollSpeed;
+            col.currentSpeed = targetScrollSpeed + Random.Range(-50f, 50f);
             col.isSpinning = true;
         }
 
@@ -118,7 +118,7 @@ public class SlotMachineScroller : MonoBehaviour
         isWholeMachineSpinning = true;
 
         // 1. Spin for 5 seconds
-        yield return new WaitForSeconds(5.0f);
+        yield return new WaitForSeconds(Random.Range(4.0f, 6.5f));
 
         // 2. Staggered sequential stop
         for (int c = 0; c < columns.Length; c++)
@@ -161,16 +161,19 @@ public class SlotMachineScroller : MonoBehaviour
         ResetSelection();
 
         // 1. Accelerate all columns to target speed using DOTween
+        // 1. Accelerate all columns to a random target speed
         foreach (var col in columns)
         {
             if (col == null) continue;
             col.isSpinning = true;
-            // Tween currentSpeed from 0 to targetScrollSpeed
-            DOTween.To(() => col.currentSpeed, x => col.currentSpeed = x, targetScrollSpeed, 0.5f);
+    
+            // প্রতিবার স্পিনের সময় স্পিড একটু কম-বেশি হবে
+            float randomSpeed = targetScrollSpeed + Random.Range(-60f, 60f);
+            DOTween.To(() => col.currentSpeed, x => col.currentSpeed = x, randomSpeed, 0.5f);
         }
 
-        // 2. Wait for 5 seconds (the spin timer)
-        yield return new WaitForSeconds(5.0f);
+// 2. Wait for a random spin time
+        yield return new WaitForSeconds(Random.Range(4.0f, 6.5f));
 
         // 3. Staggered sequential stop
         for (int c = 0; c < columns.Length; c++)
