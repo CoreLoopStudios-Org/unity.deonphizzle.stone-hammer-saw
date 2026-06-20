@@ -617,7 +617,6 @@ GameObject:
   - component: {fileID: 71169763}
   - component: {fileID: 71169762}
   - component: {fileID: 71169765}
-  - component: {fileID: 71169764}
   m_Layer: 5
   m_Name: HeadlineFContainer
   m_TagString: Untagged
@@ -691,31 +690,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 71169760}
   m_CullTransparentMesh: 1
---- !u!114 &71169764
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 71169760}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ca3d38142c708a4da9f8a8cce10fe17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlotMachineScroller
-  slotImages:
-  - {fileID: 1082473963}
-  - {fileID: 1829165684}
-  - {fileID: 1292992066}
-  - {fileID: 2043934771}
-  - {fileID: 170505016}
-  - {fileID: 1496863114}
-  - {fileID: 1933492907}
-  - {fileID: 1099911066}
-  - {fileID: 473510472}
-  scrollSpeed: 250
-  bottomThreshold: -80
-  resetPositionY: 50
 --- !u!114 &71169765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4276,7 +4250,6 @@ GameObject:
   - component: {fileID: 833949530}
   - component: {fileID: 833949529}
   - component: {fileID: 833949528}
-  - component: {fileID: 833949527}
   m_Layer: 5
   m_Name: HeadlineFContainer (2)
   m_TagString: Untagged
@@ -4312,31 +4285,6 @@ RectTransform:
   m_AnchoredPosition: {x: 570, y: 488}
   m_SizeDelta: {x: 107.0807, y: 107.4053}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &833949527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 833949525}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ca3d38142c708a4da9f8a8cce10fe17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlotMachineScroller
-  slotImages:
-  - {fileID: 1521117347}
-  - {fileID: 988415951}
-  - {fileID: 2036628388}
-  - {fileID: 352185122}
-  - {fileID: 1213390198}
-  - {fileID: 448005688}
-  - {fileID: 2136101875}
-  - {fileID: 1838091387}
-  - {fileID: 1693498619}
-  scrollSpeed: 250
-  bottomThreshold: -80
-  resetPositionY: 50
 --- !u!114 &833949528
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4965,6 +4913,103 @@ MonoBehaviour:
   x: 0
   y: 0
   overrideStartRotation: 0
+--- !u!1 &968949352
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 968949354}
+  - component: {fileID: 968949353}
+  m_Layer: 0
+  m_Name: WeaponSelect manaeger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &968949353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968949352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ca3d38142c708a4da9f8a8cce10fe17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SlotMachineScroller
+  columns:
+  - columnName: HeadlineFContainer
+    slotImages:
+    - {fileID: 1082473963}
+    - {fileID: 1829165684}
+    - {fileID: 1292992066}
+    - {fileID: 2043934771}
+    - {fileID: 170505016}
+    - {fileID: 1496863114}
+    - {fileID: 1933492907}
+    - {fileID: 1099911066}
+    - {fileID: 473510472}
+    currentSpeed: 0
+    initialPositions: []
+    isSpinning: 0
+  - columnName: HeadlineFContainer (1)
+    slotImages:
+    - {fileID: 1774444263}
+    - {fileID: 306110530}
+    - {fileID: 423803111}
+    - {fileID: 1929850281}
+    - {fileID: 347644811}
+    - {fileID: 1488197699}
+    - {fileID: 1922075839}
+    - {fileID: 103579455}
+    - {fileID: 370966827}
+    currentSpeed: 0
+    initialPositions: []
+    isSpinning: 0
+  - columnName: HeadlineFContainer (2)
+    slotImages:
+    - {fileID: 1521117347}
+    - {fileID: 988415951}
+    - {fileID: 2036628388}
+    - {fileID: 352185122}
+    - {fileID: 1213390198}
+    - {fileID: 448005688}
+    - {fileID: 2136101875}
+    - {fileID: 1838091387}
+    - {fileID: 1693498619}
+    currentSpeed: 0
+    initialPositions: []
+    isSpinning: 0
+  targetScrollSpeed: 250
+  bottomThreshold: -80
+  resetPositionY: 50
+  arrowImages:
+  - {fileID: 1759756181}
+  - {fileID: 393139609}
+  arrowAnimationSpeed: 0.5
+  dimAlpha: 0.75
+  selectScaleMultiplier: 1.8
+  selectTweenDuration: 0.5
+--- !u!4 &968949354
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968949352}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &988415950
 GameObject:
   m_ObjectHideFlags: 0
@@ -5724,7 +5769,6 @@ GameObject:
   - component: {fileID: 1175907746}
   - component: {fileID: 1175907745}
   - component: {fileID: 1175907744}
-  - component: {fileID: 1175907743}
   m_Layer: 5
   m_Name: HeadlineFContainer (1)
   m_TagString: Untagged
@@ -5760,31 +5804,6 @@ RectTransform:
   m_AnchoredPosition: {x: 9, y: 488}
   m_SizeDelta: {x: 107.0807, y: 107.4053}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1175907743
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1175907741}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ca3d38142c708a4da9f8a8cce10fe17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SlotMachineScroller
-  slotImages:
-  - {fileID: 1774444263}
-  - {fileID: 306110530}
-  - {fileID: 423803111}
-  - {fileID: 1929850281}
-  - {fileID: 347644811}
-  - {fileID: 1488197699}
-  - {fileID: 1922075839}
-  - {fileID: 103579455}
-  - {fileID: 370966827}
-  scrollSpeed: 250
-  bottomThreshold: -80
-  resetPositionY: 50
 --- !u!114 &1175907744
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13673,3 +13692,4 @@ SceneRoots:
   - {fileID: 2082014432}
   - {fileID: 2134075683}
   - {fileID: 1943821917}
+  - {fileID: 968949354}
