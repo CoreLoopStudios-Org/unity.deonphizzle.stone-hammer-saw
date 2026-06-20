@@ -9827,7 +9827,7 @@ MonoBehaviour:
     currentSpeed: 0
     initialPositions: []
     isSpinning: 0
-  targetScrollSpeed: 250
+  targetScrollSpeed: 200
   bottomThreshold: -80
   resetPositionY: 50
   arrowImages:
