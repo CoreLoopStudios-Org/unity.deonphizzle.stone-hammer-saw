@@ -49,9 +49,9 @@ public class SlotMachineScroller : MonoBehaviour
     private Vector2 originalAnchorMax;
     private Vector2 originalPivot;
 
-    void Start()
+    // গেম শুরু হওয়ার সময় একবার পজিশনগুলো সেভ করে রাখা
+    void Awake()
     {
-        // Cache initial positions and start spinning immediately
         foreach (var col in columns)
         {
             if (col == null || col.slotImages == null) continue;
@@ -63,12 +63,8 @@ public class SlotMachineScroller : MonoBehaviour
                     col.initialPositions[i] = col.slotImages[i].anchoredPosition;
                 }
             }
-            // Set initial speed to start spinning like before
-            col.currentSpeed = targetScrollSpeed + Random.Range(-50f, 50f);
-            col.isSpinning = true;
         }
 
-        // Cache original scales of arrows before starting animation
         if (arrowImages != null && arrowImages.Length > 0)
         {
             arrowOriginalScales = new Vector3[arrowImages.Length];
@@ -80,12 +76,39 @@ public class SlotMachineScroller : MonoBehaviour
                 }
             }
         }
+    }
 
-        // Start arrow animation
+    // প্যানেল ওপেন বা Active হওয়ার সাথে সাথেই এই মেথড কল হবে
+    void OnEnable()
+    {
         StartArrowAnimation();
 
-        // Automatically start the 5-second spin and stop routine on launch
-        StartCoroutine(AutoSpinStopRoutine());
+        // যদি আগে থেকে স্পিন না চলতে থাকে, তাহলে অটোমেটিক স্পিন শুরু করবে
+        if (!isWholeMachineSpinning)
+        {
+            StartCoroutine(SpinRoutine());
+        }
+    }
+
+    // প্যানেল ক্লোজ বা Hide হওয়ার সময় সবকিছু রিসেট করে দেওয়া
+    void OnDisable()
+    {
+        StopAllCoroutines();
+        isWholeMachineSpinning = false;
+        
+        foreach (var col in columns)
+        {
+            if (col != null)
+            {
+                col.currentSpeed = 0f;
+                col.isSpinning = false;
+            }
+        }
+        
+        if (arrowSequenceTween != null) arrowSequenceTween.Kill();
+        DOTween.Kill("GlowPulse");
+        
+        ResetSelection();
     }
 
     void Update()
@@ -113,46 +136,6 @@ public class SlotMachineScroller : MonoBehaviour
         }
     }
 
-    private IEnumerator AutoSpinStopRoutine()
-    {
-        isWholeMachineSpinning = true;
-
-        // 1. Spin for 5 seconds
-        yield return new WaitForSeconds(Random.Range(4.0f, 6.5f));
-
-        // 2. Staggered sequential stop
-        for (int c = 0; c < columns.Length; c++)
-        {
-            var col = columns[c];
-            if (col == null) continue;
-            // Decelerate column speed to 0 using DOTween
-            yield return DOTween.To(() => col.currentSpeed, x => col.currentSpeed = x, 0f, 1.0f)
-                .SetEase(Ease.OutQuad)
-                .WaitForCompletion();
-
-            col.isSpinning = false;
-            col.currentSpeed = 0f;
-
-            // Snap the column to its nearest alignment position
-            SnapColumn(col);
-
-            // Wait a small delay before stopping the next column
-            yield return new WaitForSeconds(0.4f);
-        }
-
-        isWholeMachineSpinning = false;
-
-        // 3. Select weapon
-        SelectWeapon();
-    }
-
-    [ContextMenu("Start Spin")]
-    public void StartSpin()
-    {
-        if (isWholeMachineSpinning) return;
-        StartCoroutine(SpinRoutine());
-    }
-
     private IEnumerator SpinRoutine()
     {
         isWholeMachineSpinning = true;
@@ -160,26 +143,40 @@ public class SlotMachineScroller : MonoBehaviour
         // Reset previous selection UI if active
         ResetSelection();
 
-        // 1. Accelerate all columns to target speed using DOTween
         // 1. Accelerate all columns to a random target speed
         foreach (var col in columns)
         {
             if (col == null) continue;
             col.isSpinning = true;
+            col.currentSpeed = 0f; // জিরো থেকে স্পিড শুরু হবে
     
-            // প্রতিবার স্পিনের সময় স্পিড একটু কম-বেশি হবে
+            // প্রতিবার স্পিনের সময় স্পিড একটু কম-বেশি হবে
             float randomSpeed = targetScrollSpeed + Random.Range(-60f, 60f);
             DOTween.To(() => col.currentSpeed, x => col.currentSpeed = x, randomSpeed, 0.5f);
         }
 
-// 2. Wait for a random spin time
-        yield return new WaitForSeconds(Random.Range(4.0f, 6.5f));
+        // 2. Wait for a random spin time OR until player touches the screen
+        float spinTime = Random.Range(4.0f, 6.5f);
+        float elapsedTime = 0f;
+
+        while (elapsedTime < spinTime)
+        {
+            // ০.৫ সেকেন্ড যাওয়ার পর থেকে টাচ চেক করবে (যেন প্যানেল ওপেন করার টাচেই থেমে না যায়)
+            if (elapsedTime > 0.5f && Input.GetMouseButtonDown(0))
+            {
+                break; // টাচ পেলেই থামার সিকুয়েন্স শুরু করবে
+            }
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
 
         // 3. Staggered sequential stop
         for (int c = 0; c < columns.Length; c++)
         {
             var col = columns[c];
             if (col == null) continue;
+            
             // Decelerate column speed to 0 using DOTween
             yield return DOTween.To(() => col.currentSpeed, x => col.currentSpeed = x, 0f, 1.0f)
                 .SetEase(Ease.OutQuad)
@@ -232,6 +229,9 @@ public class SlotMachineScroller : MonoBehaviour
     private void StartArrowAnimation()
     {
         if (arrowImages == null || arrowImages.Length == 0 || arrowOriginalScales == null) return;
+        
+        // আগে কোনো এনিমেশন চলতে থাকলে সেটা বন্ধ করে দেওয়া
+        if (arrowSequenceTween != null) arrowSequenceTween.Kill();
 
         // Loop wave scale/fade animation preserving original aspect ratios
         Sequence seq = DOTween.Sequence();
