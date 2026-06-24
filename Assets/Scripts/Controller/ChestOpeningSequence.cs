@@ -38,7 +38,7 @@ public class ChestOpeningSequence : MonoBehaviour
     public ParticleSystem openParticleSystem;
 
     [Header("Weapon Selection Integration")]
-    [Tooltip("The WeoponSelect-Panel-Moiib Squad panel UI GameObject.")]
+    [Tooltip("The WeoponSelect-Panel-Moiib Squad New panel UI GameObject.")]
     public GameObject weaponSelectPanel;
     [Tooltip("Prefab for the Hammer weapon (SledgeHammer2.fbx).")]
     public GameObject hammerPrefab;
@@ -162,7 +162,7 @@ public class ChestOpeningSequence : MonoBehaviour
             weaponSelectPanel = null;
         }
 
-        // Find WeoponSelect-Panel dynamically in the scene if not explicitly assigned
+        // Find WeoponSelect-Panel-Moiib Squad New dynamically in the scene if not explicitly assigned
         if (weaponSelectPanel == null)
         {
             // 1. Scan memory for scene GameObjects matching the name
@@ -170,10 +170,7 @@ public class ChestOpeningSequence : MonoBehaviour
             {
                 if (IsSceneObject(go))
                 {
-                    if (go.name == "WeoponSelect-Panel-Moiib Squad" || 
-                        go.name == "WeoponSelect-Panel" || 
-                        go.name == "Weapon-Select-Panel" || 
-                        go.name == "WeaponSelect-Panel")
+                    if (go.name == "WeoponSelect-Panel-Moiib Squad New")
                     {
                         weaponSelectPanel = go;
                         Debug.Log($"[ChestOpeningSequence] Found panel object '{go.name}' in scene memory.");
@@ -188,10 +185,7 @@ public class ChestOpeningSequence : MonoBehaviour
                 GameObject canvasGo = GameObject.Find("Canvas");
                 if (canvasGo != null)
                 {
-                    Transform panelTrans = canvasGo.transform.Find("WeoponSelect-Panel-Moiib Squad");
-                    if (panelTrans == null) panelTrans = canvasGo.transform.Find("WeoponSelect-Panel");
-                    if (panelTrans == null) panelTrans = canvasGo.transform.Find("Weapon-Select-Panel");
-                    
+                    Transform panelTrans = canvasGo.transform.Find("WeoponSelect-Panel-Moiib Squad New");
                     if (panelTrans != null)
                     {
                         weaponSelectPanel = panelTrans.gameObject;
@@ -253,14 +247,14 @@ public class ChestOpeningSequence : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[ChestOpeningSequence] WeoponSelect-Panel (Moiib Squad) NOT found in scene! Auto-selecting Hammer as fallback.");
+            Debug.LogError("[ChestOpeningSequence] WeoponSelect-Panel-Moiib Squad New NOT found in scene! Auto-selecting Hammer as fallback.");
             SelectWeapon(2); // Fallback to Hammer immediately
         }
     }
 
     private void CreateProceduralButtons(GameObject parentPanel)
     {
-        Debug.Log("[ChestOpeningSequence] No buttons found on WeoponSelect-Panel. Creating procedural weapon buttons...");
+        Debug.Log("[ChestOpeningSequence] No buttons found on WeoponSelect-Panel-Moiib Squad New. Creating procedural weapon buttons...");
 
         // Add a VerticalLayoutGroup to position buttons automatically
         UnityEngine.UI.VerticalLayoutGroup layout = parentPanel.GetComponent<UnityEngine.UI.VerticalLayoutGroup>();
