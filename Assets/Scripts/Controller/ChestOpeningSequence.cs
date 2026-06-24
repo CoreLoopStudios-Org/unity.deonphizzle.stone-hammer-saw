@@ -286,9 +286,12 @@ public class ChestOpeningSequence : MonoBehaviour
                 }
             }
 
-            // Start the 5-second countdown timer
-            if (countdownCoroutine != null) StopCoroutine(countdownCoroutine);
-            countdownCoroutine = StartCoroutine(StartCountdownTimer());
+            // Start the 5-second countdown timer (old panel only)
+            if (!isNewPanel)
+            {
+                if (countdownCoroutine != null) StopCoroutine(countdownCoroutine);
+                countdownCoroutine = StartCoroutine(StartCountdownTimer());
+            }
         }
         else
         {

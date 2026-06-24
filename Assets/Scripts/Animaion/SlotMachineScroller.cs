@@ -122,10 +122,8 @@ public class SlotMachineScroller : MonoBehaviour
         if (arrowSequenceTween != null) arrowSequenceTween.Kill();
         DOTween.Kill("GlowPulse");
         
-        if (currentlySelectedImage != null)
-        {
-            needsResetSelectionOnEnable = true;
-        }
+        // Reset selection immediately to clear the scaled-up UI from the screen
+        ResetSelection();
     }
 
     void Update()
