@@ -33,6 +33,8 @@ public class SlotMachineScroller : MonoBehaviour
     public float selectTweenDuration = 0.5f;
     [SerializeField] private UISpinParticleController spinParticleController;
 
+    public event System.Action<int> OnWeaponSelected;
+
     private bool isWholeMachineSpinning = false;
     private GameObject dimOverlay;
     private Tween arrowSequenceTween;
@@ -296,14 +298,14 @@ public class SlotMachineScroller : MonoBehaviour
     {
         StopAndResetArrows();
 
-        // Select the center item of columns[1] (middle column)
-        if (columns == null || columns.Length <= 1) return;
-        var middleCol = columns[1];
-        if (middleCol == null || middleCol.slotImages == null || middleCol.slotImages.Length == 0) return;
+        // Select the center item of columns[1] (middle column) or columns[0] if only one column exists
+        if (columns == null || columns.Length == 0) return;
+        var selectCol = columns.Length > 1 ? columns[1] : columns[0];
+        if (selectCol == null || selectCol.slotImages == null || selectCol.slotImages.Length == 0) return;
 
         RectTransform bestImage = null;
         float bestDist = float.MaxValue;
-        foreach (var img in middleCol.slotImages)
+        foreach (var img in selectCol.slotImages)
         {
             if (img == null) continue;
             float dist = Mathf.Abs(img.anchoredPosition.y); // Viewport center is Y=0
@@ -377,6 +379,16 @@ public class SlotMachineScroller : MonoBehaviour
         {
             weaponImage.DOColor(neonColor, 0.4f).SetLoops(-1, LoopType.Yoyo).SetId("GlowPulse");
         }
+
+        // Map the selected image's name to a weapon index (0 to 4)
+        int weaponIndex = 2; // Default to Hammer (2)
+        if (int.TryParse(bestImage.name, out int parsedNum))
+        {
+            weaponIndex = (parsedNum - 1) % 5;
+        }
+
+        // Notify subscribers
+        OnWeaponSelected?.Invoke(weaponIndex);
     }
 
     private void ResetSelection()

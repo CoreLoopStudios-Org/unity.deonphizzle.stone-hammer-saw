@@ -51,6 +51,7 @@ public class ChestOpeningSequence : MonoBehaviour
 
     private bool selectionMade = false;
     private Coroutine countdownCoroutine;
+    private GameObject scrollerManagerGo;
 
     private void Start()
     {
@@ -62,6 +63,14 @@ public class ChestOpeningSequence : MonoBehaviour
         if (hammerPrefab == null)
         {
             hammerPrefab = Resources.Load<GameObject>("SledgeHammer2");
+        }
+
+        // Find the WeaponSelect manaeger at start (while it is active) and deactivate it so it doesn't auto-spin/show
+        scrollerManagerGo = GameObject.Find("WeaponSelect manaeger");
+        if (scrollerManagerGo != null)
+        {
+            scrollerManagerGo.SetActive(false);
+            Debug.Log("[ChestOpeningSequence] Deactivated 'WeaponSelect manaeger' at start to prevent auto-spin.");
         }
 
         // Ensure the BoxCollider is marked as a trigger and has a generous size for reliable detection
@@ -241,6 +250,28 @@ public class ChestOpeningSequence : MonoBehaviour
                 slotMachine.OnWeaponSelected += OnSlotMachineWeaponSelected;
             }
 
+            // Also support WeaponSelect manaeger / SlotMachineScroller
+            if (scrollerManagerGo == null)
+            {
+                Transform scrollerTrans = weaponSelectPanel.transform.parent.Find("WeaponSelect manaeger");
+                if (scrollerTrans != null)
+                {
+                    scrollerManagerGo = scrollerTrans.gameObject;
+                }
+            }
+
+            if (scrollerManagerGo != null)
+            {
+                scrollerManagerGo.SetActive(true);
+                SlotMachineScroller scroller = scrollerManagerGo.GetComponent<SlotMachineScroller>();
+                if (scroller != null)
+                {
+                    // Subscribe to slot machine selection event
+                    scroller.OnWeaponSelected -= OnScrollerWeaponSelected;
+                    scroller.OnWeaponSelected += OnScrollerWeaponSelected;
+                }
+            }
+
             // Start the 5-second countdown timer
             if (countdownCoroutine != null) StopCoroutine(countdownCoroutine);
             countdownCoroutine = StartCoroutine(StartCountdownTimer());
@@ -381,6 +412,15 @@ public class ChestOpeningSequence : MonoBehaviour
             slotMachine.StopSpinning(weaponIndex);
         }
 
+        if (scrollerManagerGo != null)
+        {
+            SlotMachineScroller scroller = scrollerManagerGo.GetComponent<SlotMachineScroller>();
+            if (scroller != null)
+            {
+                scroller.OnWeaponSelected -= OnScrollerWeaponSelected;
+            }
+        }
+
         if (GameplayController.Instance != null)
         {
             GameplayController.Instance.SelectWeapon(weaponIndex);
@@ -392,6 +432,26 @@ public class ChestOpeningSequence : MonoBehaviour
     private void OnSlotMachineWeaponSelected(int index)
     {
         SelectWeapon(index);
+    }
+
+    private void OnScrollerWeaponSelected(int weaponIndex)
+    {
+        StartCoroutine(DelayedEquipScrollerWeapon(weaponIndex));
+    }
+
+    private System.Collections.IEnumerator DelayedEquipScrollerWeapon(int weaponIndex)
+    {
+        // Wait 1 second so the player can see the selected weapon highlight in the slot machine
+        yield return new WaitForSeconds(1.0f);
+
+        // Deactivate the WeaponSelect manaeger GameObject
+        if (scrollerManagerGo != null)
+        {
+            scrollerManagerGo.SetActive(false);
+        }
+
+        // Proceed to select and equip the weapon
+        SelectWeapon(weaponIndex);
     }
 
     private void SpawnAndEquipWeapon(int weaponIndex)
@@ -784,6 +844,15 @@ public class ChestOpeningSequence : MonoBehaviour
         if (slotMachine != null)
         {
             slotMachine.OnWeaponSelected -= OnSlotMachineWeaponSelected;
+        }
+
+        if (scrollerManagerGo != null)
+        {
+            SlotMachineScroller scroller = scrollerManagerGo.GetComponent<SlotMachineScroller>();
+            if (scroller != null)
+            {
+                scroller.OnWeaponSelected -= OnScrollerWeaponSelected;
+            }
         }
     }
 }
