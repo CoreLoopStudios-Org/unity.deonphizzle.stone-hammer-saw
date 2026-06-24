@@ -113,17 +113,31 @@ public class GameplayController : NetworkBehaviour
         int myScore = Object.HasStateAuthority ? masterScore : clientScore;
         int enemyScore = Object.HasStateAuthority ? clientScore : masterScore;
 
-        if (uiManager != null)
+        // In Mob Squad 3D scene, weapon selection is triggered by ChestOpeningSequence
+        // Only show weapon select automatically if ChestOpeningSequence is NOT present
+        ChestOpeningSequence chestSequence = FindObjectOfType<ChestOpeningSequence>();
+        if (chestSequence == null)
         {
-            uiManager.ShowWeaponSelect();
-            uiManager.UpdateRoundUI(round, myScore, enemyScore);
-        }
+            if (uiManager != null)
+            {
+                uiManager.ShowWeaponSelect();
+                uiManager.UpdateRoundUI(round, myScore, enemyScore);
+            }
 
-        // Reset and start spin slot machine
-        SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
-        if (slotMachine != null)
+            // Reset and start spin slot machine
+            SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
+            if (slotMachine != null)
+            {
+                slotMachine.ResetAndStartSpin();
+            }
+        }
+        else
         {
-            slotMachine.ResetAndStartSpin();
+            // Mob Squad scene — just update round UI, let chest proximity handle weapon select
+            if (uiManager != null)
+            {
+                uiManager.UpdateRoundUI(round, myScore, enemyScore);
+            }
         }
 
         // সার্ভার-সাইড টাইমআউট (১০ সেকেন্ড পর অটোমেটিক রেজাল্ট, কেউ AFK থাকলে)

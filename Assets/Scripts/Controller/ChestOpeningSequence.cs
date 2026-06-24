@@ -237,6 +237,16 @@ public class ChestOpeningSequence : MonoBehaviour
                 }
             }
 
+            // Start the slot machine spinning now that the panel is visible
+            SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
+            if (slotMachine != null)
+            {
+                slotMachine.ResetAndStartSpin();
+                // Subscribe to slot machine selection event
+                slotMachine.OnWeaponSelected -= OnSlotMachineWeaponSelected;
+                slotMachine.OnWeaponSelected += OnSlotMachineWeaponSelected;
+            }
+
             // Start the 5-second countdown timer
             if (countdownCoroutine != null) StopCoroutine(countdownCoroutine);
             countdownCoroutine = StartCoroutine(StartCountdownTimer());
@@ -369,7 +379,25 @@ public class ChestOpeningSequence : MonoBehaviour
             countdownCoroutine = null;
         }
 
+        // Unsubscribe from slot machine selection event
+        SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
+        if (slotMachine != null)
+        {
+            slotMachine.OnWeaponSelected -= OnSlotMachineWeaponSelected;
+            slotMachine.StopSpinning(weaponIndex);
+        }
+
+        if (GameplayController.Instance != null)
+        {
+            GameplayController.Instance.SelectWeapon(weaponIndex);
+        }
+
         SpawnAndEquipWeapon(weaponIndex);
+    }
+
+    private void OnSlotMachineWeaponSelected(int index)
+    {
+        SelectWeapon(index);
     }
 
     private void SpawnAndEquipWeapon(int weaponIndex)
@@ -756,6 +784,12 @@ public class ChestOpeningSequence : MonoBehaviour
         if (countdownCoroutine != null)
         {
             StopCoroutine(countdownCoroutine);
+        }
+
+        SlotMachineManager slotMachine = FindObjectOfType<SlotMachineManager>();
+        if (slotMachine != null)
+        {
+            slotMachine.OnWeaponSelected -= OnSlotMachineWeaponSelected;
         }
     }
 }

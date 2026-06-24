@@ -12,11 +12,12 @@ public class SlotMachineManager : MonoBehaviour
     
     public event System.Action<int> OnWeaponSelected;
     
-    private bool isSpinning = true;
+    private bool isSpinning = false;
 
     void Start()
     {
-        ResetAndStartSpin();
+        // Don't auto-spin. Wait for ChestOpeningSequence to trigger us.
+        isSpinning = false;
     }
 
     public void ResetAndStartSpin()
@@ -44,6 +45,16 @@ public class SlotMachineManager : MonoBehaviour
     // Ei function ti call hobe 3s por OR tap korle
     public void StopSpinning()
     {
+        StopSpinningInternal(-1);
+    }
+
+    public void StopSpinning(int forcedIndex)
+    {
+        StopSpinningInternal(forcedIndex);
+    }
+
+    private void StopSpinningInternal(int forcedIndex)
+    {
         if (!isSpinning) return; // Jodi already theme jay, tobe abar stop hobe na
         
         isSpinning = false;
@@ -54,10 +65,14 @@ public class SlotMachineManager : MonoBehaviour
             scrollRect.velocity = Vector2.zero; // Clear inertia
         }
 
-        float pos = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
-        float segment = 1f / 5f; 
-        int selectedIndex = Mathf.Clamp(Mathf.RoundToInt(pos / segment), 0, 4);
-        float targetPos = selectedIndex * segment;
+        int selectedIndex = forcedIndex;
+        if (selectedIndex == -1)
+        {
+            float pos = Mathf.Clamp01(scrollRect.verticalNormalizedPosition);
+            float segment = 1f / 5f; 
+            selectedIndex = Mathf.Clamp(Mathf.RoundToInt(pos / segment), 0, 4);
+        }
+        float targetPos = selectedIndex * (1f / 5f);
 
         if (scrollRect != null)
         {
