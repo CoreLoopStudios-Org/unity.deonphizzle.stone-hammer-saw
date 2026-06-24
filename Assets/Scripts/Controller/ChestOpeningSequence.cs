@@ -210,24 +210,38 @@ public class ChestOpeningSequence : MonoBehaviour
             weaponSelectPanel.SetActive(true);
             selectionMade = false;
 
-            // Make the panel background clickable to select the Hammer
+            bool isNewPanel = weaponSelectPanel.name.Contains("New");
             UnityEngine.UI.Button panelBtn = weaponSelectPanel.GetComponent<UnityEngine.UI.Button>();
-            if (panelBtn == null)
+
+            if (!isNewPanel)
             {
-                panelBtn = weaponSelectPanel.AddComponent<UnityEngine.UI.Button>();
+                // Make the panel background clickable to select the Hammer (old panel only)
+                if (panelBtn == null)
+                {
+                    panelBtn = weaponSelectPanel.AddComponent<UnityEngine.UI.Button>();
+                }
+                panelBtn.onClick.RemoveAllListeners();
+                panelBtn.onClick.AddListener(() => SelectWeapon(2)); // Default to Hammer on panel background click
             }
-            panelBtn.onClick.RemoveAllListeners();
-            panelBtn.onClick.AddListener(() => SelectWeapon(2)); // Default to Hammer on panel background click
+            else
+            {
+                // Ensure any leftover Button component on the new panel background doesn't trigger and interfere
+                if (panelBtn != null)
+                {
+                    Destroy(panelBtn);
+                    panelBtn = null;
+                }
+            }
 
             // Dynamically assign listeners to any UI Buttons on this panel
             UnityEngine.UI.Button[] buttons = weaponSelectPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true);
             
-            // If the panel has no buttons, procedurally create them!
-            if (buttons.Length == 0 || (buttons.Length == 1 && buttons[0] == panelBtn))
+            // If the panel has no buttons and is not the new slot machine panel, procedurally create them!
+            if (!isNewPanel && (buttons.Length == 0 || (buttons.Length == 1 && buttons[0] == panelBtn)))
             {
                 CreateProceduralButtons(weaponSelectPanel);
             }
-            else
+            else if (!isNewPanel)
             {
                 Debug.Log($"[ChestOpeningSequence] Panel has {buttons.Length} existing buttons. Hooking up select events...");
                 for (int i = 0; i < buttons.Length; i++)
