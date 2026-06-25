@@ -26,14 +26,19 @@ public class SquidGameManager : MonoBehaviour
     private int lastSec = -1;
     private bool tapPanelHasBeenActive = false;
 
-    // Runtime Dynamic UI text components
-    private TextMeshProUGUI statusText;
-    private TextMeshProUGUI timerText;
+    [Header("UI Text References")]
+    public TextMeshProUGUI statusText;
+    public TextMeshProUGUI timerText;
+    public Transform uiParent; // Assign your "Controller Background" panel or canvas here
 
     private void Start()
     {
-        // Setup text components dynamically inside the canvas
+        // Setup text components dynamically inside the canvas (if not assigned)
         SetupDynamicUI();
+
+        // Initialize display values at startup
+        if (statusText != null) statusText.text = "";
+        if (timerText != null) timerText.text = "Time: " + Mathf.CeilToInt(timeLimit) + "s";
 
         // Music should start paused
         if (dollMusic != null) dollMusic.Stop();
@@ -41,42 +46,76 @@ public class SquidGameManager : MonoBehaviour
 
     private void SetupDynamicUI()
     {
-        GameObject canvasObj = GameObject.Find("Pungupops bg-panel");
-        if (canvasObj == null) canvasObj = GameObject.Find("Canvas");
+        // If already assigned via inspector, don't recreate them dynamically
+        if (statusText != null && timerText != null)
+        {
+            return;
+        }
 
-        if (canvasObj != null)
+        Transform parentTransform = uiParent;
+        if (parentTransform == null)
+        {
+            GameObject parentObj = GameObject.Find("Controller Background");
+            if (parentObj == null) parentObj = GameObject.Find("Pungupops bg-panel");
+            if (parentObj == null) parentObj = GameObject.Find("Canvas");
+            if (parentObj != null) parentTransform = parentObj.transform;
+        }
+
+        if (parentTransform != null)
         {
             // Status Text (Match countdown and Light updates)
-            GameObject statusObj = new GameObject("SquidStatusText");
-            statusObj.transform.SetParent(canvasObj.transform, false);
-            statusText = statusObj.AddComponent<TextMeshProUGUI>();
-            statusText.alignment = TextAlignmentOptions.Center;
-            statusText.fontSize = 70f;
-            statusText.fontStyle = FontStyles.Bold;
-            statusText.color = Color.yellow;
-            
-            RectTransform statusRect = statusText.rectTransform;
-            statusRect.anchorMin = new Vector2(0.5f, 0.5f);
-            statusRect.anchorMax = new Vector2(0.5f, 0.5f);
-            statusRect.anchoredPosition = new Vector2(0f, 150f);
-            statusRect.sizeDelta = new Vector2(800f, 150f);
-            statusText.text = "";
+            if (statusText == null)
+            {
+                Transform existingStatus = parentTransform.Find("SquidStatusText");
+                if (existingStatus != null)
+                {
+                    statusText = existingStatus.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    GameObject statusObj = new GameObject("SquidStatusText");
+                    statusObj.transform.SetParent(parentTransform, false);
+                    statusText = statusObj.AddComponent<TextMeshProUGUI>();
+                    statusText.alignment = TextAlignmentOptions.Center;
+                    statusText.fontSize = 70f;
+                    statusText.fontStyle = FontStyles.Bold;
+                    statusText.color = Color.yellow;
+                    
+                    RectTransform statusRect = statusText.rectTransform;
+                    statusRect.anchorMin = new Vector2(0.5f, 0.5f);
+                    statusRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    statusRect.anchoredPosition = new Vector2(0f, 150f);
+                    statusRect.sizeDelta = new Vector2(800f, 150f);
+                    statusText.text = "";
+                }
+            }
 
             // Timer Text (60s countdown)
-            GameObject timerObj = new GameObject("SquidTimerText");
-            timerObj.transform.SetParent(canvasObj.transform, false);
-            timerText = timerObj.AddComponent<TextMeshProUGUI>();
-            timerText.alignment = TextAlignmentOptions.Center;
-            timerText.fontSize = 45f;
-            timerText.fontStyle = FontStyles.Bold;
-            timerText.color = Color.white;
+            if (timerText == null)
+            {
+                Transform existingTimer = parentTransform.Find("SquidTimerText");
+                if (existingTimer != null)
+                {
+                    timerText = existingTimer.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    GameObject timerObj = new GameObject("SquidTimerText");
+                    timerObj.transform.SetParent(parentTransform, false);
+                    timerText = timerObj.AddComponent<TextMeshProUGUI>();
+                    timerText.alignment = TextAlignmentOptions.Center;
+                    timerText.fontSize = 45f;
+                    timerText.fontStyle = FontStyles.Bold;
+                    timerText.color = Color.white;
 
-            RectTransform timerRect = timerText.rectTransform;
-            timerRect.anchorMin = new Vector2(0.5f, 1f);
-            timerRect.anchorMax = new Vector2(0.5f, 1f);
-            timerRect.anchoredPosition = new Vector2(0f, -60f);
-            timerRect.sizeDelta = new Vector2(400f, 80f);
-            timerText.text = "";
+                    RectTransform timerRect = timerText.rectTransform;
+                    timerRect.anchorMin = new Vector2(0.5f, 1f);
+                    timerRect.anchorMax = new Vector2(0.5f, 1f);
+                    timerRect.anchoredPosition = new Vector2(0f, -60f);
+                    timerRect.sizeDelta = new Vector2(400f, 80f);
+                    timerText.text = "";
+                }
+            }
         }
     }
 
@@ -103,14 +142,12 @@ public class SquidGameManager : MonoBehaviour
                 if (tapToPlayPanel.activeSelf)
                 {
                     tapPanelHasBeenActive = true;
+                    return; // Wait until player taps and closes it
                 }
 
-                // Start game only if panel was active at some point and is now closed
-                if (tapPanelHasBeenActive && !tapToPlayPanel.activeSelf)
-                {
-                    isGameStarted = true;
-                    StartCoroutine(StartMatchCountdown());
-                }
+                // If the panel is now closed (or started inactive), start the game
+                isGameStarted = true;
+                StartCoroutine(StartMatchCountdown());
             }
             else
             {
