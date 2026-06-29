@@ -438,7 +438,19 @@ public class ChestOpeningSequence : MonoBehaviour
             }
         }
 
-        if (GameplayController.Instance != null)
+        if (MobSquadGameManager.Instance != null)
+        {
+            var runner = FindObjectOfType<Fusion.NetworkRunner>();
+            if (runner != null)
+            {
+                Fusion.NetworkObject localObj = runner.GetPlayerObject(runner.LocalPlayer);
+                if (localObj != null)
+                {
+                    MobSquadGameManager.Instance.RPC_ExecuteAttack(localObj, weaponIndex);
+                }
+            }
+        }
+        else if (GameplayController.Instance != null)
         {
             GameplayController.Instance.SelectWeapon(weaponIndex);
         }

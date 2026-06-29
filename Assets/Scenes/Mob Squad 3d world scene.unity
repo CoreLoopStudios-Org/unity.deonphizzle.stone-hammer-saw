@@ -10164,7 +10164,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &358658546
 RectTransform:
   m_ObjectHideFlags: 0
@@ -21833,7 +21833,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1230892217
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23715,8 +23715,9 @@ GameObject:
   - component: {fileID: 1383445222}
   - component: {fileID: 1383445224}
   - component: {fileID: 1383445223}
+  - component: {fileID: 1383445225}
   m_Layer: 5
-  m_Name: Image (1)
+  m_Name: Next Round
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23779,6 +23780,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383445221}
   m_CullTransparentMesh: 1
+--- !u!114 &1383445225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383445221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1383445223}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1386421795
 GameObject:
   m_ObjectHideFlags: 0
@@ -29489,7 +29534,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1782065426
 RectTransform:
   m_ObjectHideFlags: 0
@@ -30789,7 +30834,7 @@ GameObject:
   - component: {fileID: 1895985928}
   - component: {fileID: 1895985927}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: Spawn-Green-Line
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33514,8 +33559,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2117154452}
-  - component: {fileID: 2117154451}
   - component: {fileID: 2117154450}
+  - component: {fileID: 2117154453}
+  - component: {fileID: 2117154454}
   m_Layer: 0
   m_Name: MobSquadGameManager
   m_TagString: Untagged
@@ -33620,30 +33666,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &2117154451
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2117154449}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d189e5638b3c4254e8d9766c56b3b106, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SquidGameManager
-  timeLimit: 60
-  dollMusic: {fileID: 2117154450}
-  reactionTime: 0.5
-  tapToPlayPanel: {fileID: 1230892216}
-  gameOverPanel: {fileID: 358658545}
-  isGreenLight: 0
-  isGameOver: 0
-  isGameStarted: 0
-  isCountdownActive: 0
-  statusText: {fileID: 1362609500}
-  timerText: {fileID: 215274915}
-  uiParent: {fileID: 0}
 --- !u!4 &2117154452
 Transform:
   m_ObjectHideFlags: 0
@@ -33659,6 +33681,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2117154453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117154449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59107c70cdaf8c34385b3cc9568efb6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MobSquadGameManager
+  totalPlayersGoal: 8
+  connectionTimeout: 10
+  maxRounds: 3
+  playerPrefab: {fileID: 5709256303530233763}
+  npcPrefab: {fileID: 5709256303530233763}
+  spawnLineParent: {fileID: 0}
+  chestBoxTransform: {fileID: 543450652130866664}
+  chestSeq: {fileID: 3469287838262622798}
+  tapToPlayPanel: {fileID: 1230892216}
+  winPanel: {fileID: 1782065425}
+  lossPanel: {fileID: 358658545}
+  winNextRoundBtn: {fileID: 354767820}
+  lossNextRoundBtn: {fileID: 1383445225}
+  _currentRound: 1
+  _isGameActive:
+    _value: 0
+  _isMatchOver:
+    _value: 0
+  _nextRoundConfirmations: 0
 --- !u!1001 &2123522077
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37268,3 +37321,23 @@ SceneRoots:
   - {fileID: 539437780}
   - {fileID: 1386421796}
   - {fileID: 240277225}
+
+--- !u!114 &2117154454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117154449}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 782660211
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 2117154453}
+  ForceRemoteRenderTimeframe: 0

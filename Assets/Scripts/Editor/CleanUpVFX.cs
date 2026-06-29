@@ -13,6 +13,7 @@ public static class CleanUpVFX
     [MenuItem("Tools/Clean Up VFX")]
     public static void CleanAndFixMenu()
     {
+        EditorSceneManager.OpenScene("Assets/Scenes/Mob Squad 3d world scene.unity");
         CleanAndFix();
     }
 
@@ -25,7 +26,7 @@ public static class CleanUpVFX
             return;
         }
 
-        Debug.LogWarning("[CleanUpVFX] Initiating clean and fix...");
+        Debug.LogWarning("[CleanUpVFX] Initiating clean and fix on scene: " + EditorSceneManager.GetActiveScene().name);
 
         // 1. Fix Canvas plane distance
         GameObject canvasObj = GameObject.Find("Canvas");
@@ -53,6 +54,44 @@ public static class CleanUpVFX
                 EditorUtility.SetDirty(ps);
                 EditorUtility.SetDirty(particlesObj);
                 Debug.LogWarning("[CleanUpVFX] Fixed SpinParticles velocity over lifetime mode mismatch");
+            }
+        }
+
+        // 3. Replace SquidGameManager with MobSquadGameManager on the manager GameObject
+        GameObject managerObj = GameObject.Find("MobSquadGameManager");
+        if (managerObj != null)
+        {
+            SquidGameManager squidMgr = managerObj.GetComponent<SquidGameManager>();
+            if (squidMgr != null)
+            {
+                Object.DestroyImmediate(squidMgr);
+                Debug.LogWarning("[CleanUpVFX] Removed SquidGameManager component from MobSquadGameManager GameObject.");
+            }
+
+            MobSquadGameManager mobSquadMgr = managerObj.GetComponent<MobSquadGameManager>();
+            if (mobSquadMgr == null)
+            {
+                mobSquadMgr = managerObj.AddComponent<MobSquadGameManager>();
+                Debug.LogWarning("[CleanUpVFX] Added MobSquadGameManager component to MobSquadGameManager GameObject.");
+            }
+
+            // Ensure NetworkObject is attached for Fusion simulation
+            Fusion.NetworkObject netObj = managerObj.GetComponent<Fusion.NetworkObject>();
+            if (netObj == null)
+            {
+                netObj = managerObj.AddComponent<Fusion.NetworkObject>();
+                Debug.LogWarning("[CleanUpVFX] Added Fusion.NetworkObject component to MobSquadGameManager GameObject.");
+            }
+            EditorUtility.SetDirty(managerObj);
+        }
+
+        // 4. Log all children under Canvas to find the panel names
+        GameObject canvasRoot = GameObject.Find("Canvas");
+        if (canvasRoot != null)
+        {
+            foreach (Transform child in canvasRoot.transform)
+            {
+                Debug.LogWarning($"[CleanUpVFX] Canvas Child: {child.name} (Active: {child.gameObject.activeSelf})");
             }
         }
 

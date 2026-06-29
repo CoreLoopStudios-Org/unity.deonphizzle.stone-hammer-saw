@@ -58,10 +58,9 @@ public class ThirdPersonCharacterController : MonoBehaviour
         bool isRunning = false;
 
         bool canMove = true;
-        SquidGameManager squidGM = FindObjectOfType<SquidGameManager>();
-        if (squidGM != null)
+        if (MobSquadGameManager.Instance != null)
         {
-            if (squidGM.isGameOver || squidGM.isCountdownActive || !squidGM.isGameStarted)
+            if (!MobSquadGameManager.Instance.isGameActive)
             {
                 canMove = false;
             }
