@@ -105,7 +105,7 @@ public class SquidGameManager : MonoBehaviour
 
     private void Update()
     {
-        if (MobSquadGameManager.Instance == null || !MobSquadGameManager.Instance.isGameActive) return;
+        if (MobSquadGameManager.Instance == null || !MobSquadGameManager.Instance.IsGameActiveSafe) return;
 
         timeLimit -= Time.deltaTime;
         int currentSec = Mathf.Max(0, Mathf.CeilToInt(timeLimit));

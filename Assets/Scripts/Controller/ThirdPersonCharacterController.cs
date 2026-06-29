@@ -49,6 +49,24 @@ public class ThirdPersonCharacterController : MonoBehaviour
             cameraTransform = Camera.main.transform;
         }
         yaw = transform.eulerAngles.y; 
+
+        // 1. If this is an NPC/Bot character, disable this controller script
+        if (GetComponent<NPCSquadAI>() != null)
+        {
+            this.enabled = false;
+            return;
+        }
+
+        // 2. If this is a networked player character, only keep it enabled if we have input authority
+        var netObj = GetComponent<Fusion.NetworkObject>();
+        if (netObj != null && netObj.IsValid)
+        {
+            if (!netObj.HasInputAuthority)
+            {
+                this.enabled = false;
+                return;
+            }
+        }
     }
 
     private void Update()
@@ -60,7 +78,7 @@ public class ThirdPersonCharacterController : MonoBehaviour
         bool canMove = true;
         if (MobSquadGameManager.Instance != null)
         {
-            if (!MobSquadGameManager.Instance.isGameActive)
+            if (!MobSquadGameManager.Instance.IsGameActiveSafe)
             {
                 canMove = false;
             }

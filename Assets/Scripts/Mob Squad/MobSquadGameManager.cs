@@ -13,7 +13,7 @@ public class MobSquadGameManager : NetworkBehaviour
 
     [Header("Match Settings")]
     public int totalPlayersGoal = 8;
-    public float connectionTimeout = 10f;
+    public float connectionTimeout = 5f;
     public int maxRounds = 3;
 
     [Header("Prefabs & Spawning")]
@@ -37,6 +37,15 @@ public class MobSquadGameManager : NetworkBehaviour
     [Networked] public NetworkBool isMatchOver { get; set; } = false;
     [Networked] public int nextRoundConfirmations { get; set; } = 0;
 
+    public bool IsGameActiveSafe
+    {
+        get
+        {
+            if (Object == null || !Object.IsValid) return false;
+            return isGameActive;
+        }
+    }
+
     private List<Transform> spawnPoints = new List<Transform>();
     private List<GameObject> spawnedCharacters = new List<GameObject>();
     private bool hasConfirmedNextRound = false;
@@ -44,6 +53,7 @@ public class MobSquadGameManager : NetworkBehaviour
     private NetworkRunner localRunner;
     
     private SquidGameManager squidManager;
+    private GameObject loadingScreen;
 
     private void Awake()
     {
@@ -87,6 +97,23 @@ public class MobSquadGameManager : NetworkBehaviour
 
         if (winNextRoundBtn != null) winNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
         if (lossNextRoundBtn != null) lossNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
+
+        // Find loading screen dynamically under Canvas children
+        if (loadingScreen == null)
+        {
+            Canvas canvas = FindObjectOfType<Canvas>();
+            if (canvas != null)
+            {
+                foreach (Transform child in canvas.transform)
+                {
+                    if (child.name.Contains("LoadinScreen-mob squead scene"))
+                    {
+                        loadingScreen = child.gameObject;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private void OnTapPanelClicked()
@@ -94,6 +121,7 @@ public class MobSquadGameManager : NetworkBehaviour
         if (matchmakingActive) return;
         matchmakingActive = true;
         if (tapToPlayPanel != null) tapToPlayPanel.SetActive(false);
+        if (loadingScreen != null) loadingScreen.SetActive(true);
         StartMatchmakingAndPlay();
     }
 
@@ -179,6 +207,7 @@ public class MobSquadGameManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_StartCountdown()
     {
+        if (loadingScreen != null) loadingScreen.SetActive(false);
         StartCoroutine(CountdownRoutine());
     }
 
@@ -219,20 +248,32 @@ public class MobSquadGameManager : NetworkBehaviour
     public void OnPlayerReachedBox(GameObject characterGo)
     {
         if (Object != null && !Object.HasStateAuthority) return;
-        if (!isGameActive) return;
+        
+        bool active = (Object != null && Object.IsValid) ? (bool)isGameActive : true;
+        if (!active) return;
 
-        isGameActive = false;
+        if (Object != null && Object.IsValid)
+        {
+            isGameActive = false;
+        }
         RPC_StopLocalMiniGame();
         
         var netObj = characterGo.GetComponent<NetworkObject>();
-        if (netObj != null)
+        if (netObj != null && netObj.IsValid)
         {
             roundWinner = netObj.InputAuthority;
             RPC_TriggerSelection(netObj);
         }
         else
         {
-            RPC_TriggerNPCSelection(characterGo.name);
+            if (Object != null && Object.IsValid)
+            {
+                RPC_TriggerNPCSelection(characterGo.name);
+            }
+            else
+            {
+                if (chestSeq != null) chestSeq.PlayOpeningSequence();
+            }
         }
     }
 
@@ -335,12 +376,6 @@ public class MobSquadGameManager : NetworkBehaviour
             }
         }
         return nearest;
-    }
-
-    public void OnLocalPlayerEliminated()
-    {
-        isGameActive = false;
-        if (lossPanel != null) lossPanel.SetActive(true);
     }
 
     private void ShowEndRoundPanels(PlayerRef winnerRef)

@@ -103,14 +103,25 @@ public class ChestOpeningSequence : MonoBehaviour
     {
         Debug.Log($"[ChestOpeningSequence] OnTriggerEnter triggered by: {other.gameObject.name} (Root: {other.transform.root.name})");
         
-        // Check root and parents as well in case collider is on a nested child bone/component
-        bool nameMatches = other.gameObject.name.Contains(targetCharacterName) || 
-                           (other.transform.root != null && other.transform.root.name.Contains(targetCharacterName));
+        bool isCharacter = other.gameObject.GetComponent<ThirdPersonCharacterController>() != null ||
+                            other.gameObject.GetComponent<NPCSquadAI>() != null ||
+                            other.transform.root.GetComponent<ThirdPersonCharacterController>() != null ||
+                            other.transform.root.GetComponent<NPCSquadAI>() != null ||
+                            other.gameObject.name.Contains("Pangopal") ||
+                            other.transform.root.name.Contains("Pangopal");
 
-        if (!isOpened && nameMatches)
+        if (isCharacter)
         {
-            Debug.Log("[ChestOpeningSequence] Target character detected! Play opening sequence...");
-            PlayOpeningSequence();
+            GameObject characterGo = other.transform.root.gameObject;
+            if (MobSquadGameManager.Instance != null)
+            {
+                MobSquadGameManager.Instance.OnPlayerReachedBox(characterGo);
+            }
+            else if (!isOpened)
+            {
+                Debug.Log("[ChestOpeningSequence] Target character detected! Play opening sequence...");
+                PlayOpeningSequence();
+            }
         }
     }
 
