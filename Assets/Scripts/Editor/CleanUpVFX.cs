@@ -7,7 +7,7 @@ public static class CleanUpVFX
 {
     static CleanUpVFX()
     {
-        CleanAndFix();
+        // CleanAndFix();
     }
 
     [MenuItem("Tools/Clean Up VFX")]
@@ -89,6 +89,54 @@ public static class CleanUpVFX
                 Debug.LogWarning("[CleanUpVFX] Added Fusion.NetworkObject component to MobSquadGameManager GameObject.");
             }
             EditorUtility.SetDirty(managerObj);
+
+            // 3.5 Ensure Pangopal_01 prefab exists and is assigned
+            string prefabPath = "Assets/Resources/Pangopal_01.prefab";
+            GameObject pangopalSceneObj = GameObject.Find("Pangopal_01");
+            if (pangopalSceneObj != null)
+            {
+                if (!System.IO.Directory.Exists("Assets/Resources"))
+                {
+                    System.IO.Directory.CreateDirectory("Assets/Resources");
+                }
+
+                GameObject prefabObj = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefabObj == null)
+                {
+                    GameObject tempObj = Object.Instantiate(pangopalSceneObj);
+                    tempObj.name = "Pangopal_01";
+                    tempObj.SetActive(true);
+
+                    if (tempObj.GetComponent<Fusion.NetworkObject>() == null)
+                    {
+                        tempObj.AddComponent<Fusion.NetworkObject>();
+                    }
+                    if (tempObj.GetComponent<Fusion.NetworkTransform>() == null)
+                    {
+                        tempObj.AddComponent<Fusion.NetworkTransform>();
+                    }
+
+                    prefabObj = PrefabUtility.SaveAsPrefabAsset(tempObj, prefabPath);
+                    Object.DestroyImmediate(tempObj);
+                    Debug.LogWarning("[CleanUpVFX] Created Pangopal_01 prefab with NetworkObject component.");
+                }
+
+                if (mobSquadMgr != null)
+                {
+                    if (mobSquadMgr.playerPrefab == null || mobSquadMgr.playerPrefab == pangopalSceneObj)
+                    {
+                        mobSquadMgr.playerPrefab = prefabObj;
+                        EditorUtility.SetDirty(mobSquadMgr);
+                        Debug.LogWarning("[CleanUpVFX] Assigned Pangopal_01 prefab to playerPrefab.");
+                    }
+                    if (mobSquadMgr.npcPrefab == null || mobSquadMgr.npcPrefab == pangopalSceneObj)
+                    {
+                        mobSquadMgr.npcPrefab = prefabObj;
+                        EditorUtility.SetDirty(mobSquadMgr);
+                        Debug.LogWarning("[CleanUpVFX] Assigned Pangopal_01 prefab to npcPrefab.");
+                    }
+                }
+            }
         }
 
         // 4. Log all children under Canvas to find the panel names

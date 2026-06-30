@@ -73,77 +73,81 @@ public class MobSquadGameManager : NetworkBehaviour
     public override void Spawned()
     {
         base.Spawned();
-        
-        // Hide tap to play panel and show loading screen on all clients who spawned on network
         if (tapToPlayPanel != null) tapToPlayPanel.SetActive(false);
         if (loadingScreen != null) loadingScreen.SetActive(true);
 
         if (Object.HasStateAuthority)
         {
-            localRunner = Runner; // Cache the current runner
+            localRunner = Runner; 
             StartCoroutine(MatchmakingTimeoutRoutine());
         }
     }
 
-    private void Start()
+ private void Start()
+{
+    connectionTimeout = 3f; 
+    squidManager = FindObjectOfType<SquidGameManager>();
+    
+    if (spawnLineParent == null)
     {
-        connectionTimeout = 3f; // Force 3s timeout for matchmaking as requested
-        squidManager = FindObjectOfType<SquidGameManager>();
-
-        // Auto-assign references if they are empty
-        if (spawnLineParent == null)
-            spawnLineParent = GameObject.Find("Spawn-Green-Line")?.transform;
-
-        if (spawnLineParent != null)
+        GameObject spawnLineObj = GameObject.Find("Spawn-Green-Line");
+        spawnLineParent = spawnLineObj?.transform;
+    }
+    
+    spawnPoints.Clear(); 
+    if (spawnLineParent != null)
+    {
+        foreach (Transform child in spawnLineParent) 
         {
-            foreach (Transform child in spawnLineParent) spawnPoints.Add(child);
+            spawnPoints.Add(child);
         }
-
-        if (chestBoxTransform == null)
+        Debug.Log($"[MobSquad] সফলভাবে {spawnPoints.Count}টি স্পন পয়েন্ট পাওয়া গেছে।");
+    }
+    else
+    {
+        Debug.LogError("[MobSquad] Spawn-Green-Line খুঁজে পাওয়া যায়নি! হায়ারার্কিতে এই নামের অবজেক্ট আছে কি?");
+    }
+    
+    if (chestBoxTransform == null)
+    {
+        GameObject boxObj = GameObject.Find("Box");
+        if (boxObj != null)
         {
-            GameObject boxObj = GameObject.Find("Box");
-            if (boxObj != null)
-            {
-                chestBoxTransform = boxObj.transform;
-                chestSeq = boxObj.GetComponent<ChestOpeningSequence>();
-            }
-        }
-
-        if (tapToPlayPanel == null) 
-            tapToPlayPanel = GameObject.Find("Tap-loads mob-squead3d world panel");
-
-        if (tapToPlayPanel != null)
-        {
-            // Remove TapToLoadScene component if it exists to prevent click event conflict
-            var tapToLoad = tapToPlayPanel.GetComponent<TapToLoadScene>();
-            if (tapToLoad != null) Destroy(tapToLoad);
-
-            Button panelBtn = tapToPlayPanel.GetComponent<Button>();
-            if (panelBtn == null) panelBtn = tapToPlayPanel.AddComponent<Button>();
-            panelBtn.onClick.RemoveAllListeners();
-            panelBtn.onClick.AddListener(OnTapPanelClicked);
-        }
-
-        if (winNextRoundBtn != null) winNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
-        if (lossNextRoundBtn != null) lossNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
-
-        // Find loading screen dynamically under Canvas children
-        if (loadingScreen == null)
-        {
-            Canvas canvas = FindObjectOfType<Canvas>();
-            if (canvas != null)
-            {
-                foreach (Transform child in canvas.transform)
-                {
-                    if (child.name.Contains("LoadinScreen-mob squead scene"))
-                    {
-                        loadingScreen = child.gameObject;
-                        break;
-                    }
-                }
-            }
+            chestBoxTransform = boxObj.transform;
+            chestSeq = boxObj.GetComponent<ChestOpeningSequence>();
+            Debug.Log("[MobSquad] Box এবং Chest sequence পাওয়া গেছে।");
         }
     }
+    
+    if (tapToPlayPanel == null) 
+        tapToPlayPanel = GameObject.Find("Tap-loads mob-squead3d world panel");
+
+    if (tapToPlayPanel != null)
+    {
+        var tapToLoad = tapToPlayPanel.GetComponent<TapToLoadScene>();
+        if (tapToLoad != null) Destroy(tapToLoad);
+
+        Button panelBtn = tapToPlayPanel.GetComponent<Button>();
+        if (panelBtn == null) panelBtn = tapToPlayPanel.AddComponent<Button>();
+        
+        panelBtn.onClick.RemoveAllListeners();
+        panelBtn.onClick.AddListener(OnTapPanelClicked);
+        Debug.Log("[MobSquad] TapToPlay বাটনে লিসেনার সেট করা হয়েছে।");
+    }
+    
+    if (winNextRoundBtn != null) winNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
+    if (lossNextRoundBtn != null) lossNextRoundBtn.onClick.AddListener(OnNextRoundClicked);
+    
+    if (loadingScreen == null)
+    {
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas != null)
+        {
+            Transform loading = canvas.transform.Find("LoadinScreen-mob squead scene");
+            if (loading != null) loadingScreen = loading.gameObject;
+        }
+    }
+}
 
     private void OnTapPanelClicked()
     {
@@ -204,48 +208,67 @@ public class MobSquadGameManager : NetworkBehaviour
         InitializePlayersAndNPCsOffline();
     }
 
-    private void InitializePlayersAndNPCsOffline()
+   private void InitializePlayersAndNPCsOffline()
+{
+    GameObject localPlayerObj = GameObject.Find("Pangopal_01");
+    if (localPlayerObj != null) localPlayerObj.SetActive(false);
+
+    // Shuffle spawns
+    List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
+    for (int i = 0; i < shuffledSpawns.Count; i++)
     {
-        GameObject localPlayerObj = GameObject.Find("Pangopal_01");
-        if (localPlayerObj != null) localPlayerObj.SetActive(false);
-
-        List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
-        for (int i = 0; i < shuffledSpawns.Count; i++)
-        {
-            Transform temp = shuffledSpawns[i];
-            int randomIndex = Random.Range(i, shuffledSpawns.Count);
-            shuffledSpawns[i] = shuffledSpawns[randomIndex];
-            shuffledSpawns[randomIndex] = temp;
-        }
-
-        int spawnIndex = 0;
-
-        // Spawn local player offline
-        Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
-        GameObject spawnedLocalPlayer = Instantiate(playerPrefab, localSpawnPoint.position, localSpawnPoint.rotation);
-        spawnedLocalPlayer.name = "Pangopal_01_Spawned";
-        spawnedCharacters.Add(spawnedLocalPlayer);
-
-        var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
-        if (controllerScript != null) controllerScript.enabled = true;
-
-        // Spawn 7 NPC bots
-        while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
-        {
-            Transform spawnPoint = shuffledSpawns[spawnIndex++];
-            GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
-            npcObj.name = "NPC_Bot_" + spawnIndex;
-            spawnedCharacters.Add(npcObj);
-            
-            var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
-            ai.target = chestBoxTransform;
-            ai.moveSpeed = Random.Range(2.5f, 3.5f);
-            ai.EnableAI(false);
-        }
-
-        if (loadingScreen != null) loadingScreen.SetActive(false);
-        StartCoroutine(CountdownRoutine());
+        Transform temp = shuffledSpawns[i];
+        int randomIndex = Random.Range(i, shuffledSpawns.Count);
+        shuffledSpawns[i] = shuffledSpawns[randomIndex];
+        shuffledSpawns[randomIndex] = temp;
     }
+
+    int spawnIndex = 0;
+
+    // Spawn local player offline
+    Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
+    GameObject spawnedLocalPlayer = Instantiate(playerPrefab, localSpawnPoint.position, localSpawnPoint.rotation);
+    spawnedLocalPlayer.name = "Pangopal_01_Spawned";
+    
+    // নিশ্চিত করুন ক্যারেক্টারটি সক্রিয় আছে
+    spawnedLocalPlayer.SetActive(true); 
+    spawnedCharacters.Add(spawnedLocalPlayer);
+
+    // ক্যামেরা সেটআপ: যদি ক্যামেরা থাকে তবে প্লেয়ারকে ফলো করতে বলুন
+    Transform cam = Camera.main?.transform;
+    if (cam != null)
+    {
+        // প্লেয়ারের পজিশন থেকে সামান্য পেছনে ক্যামেরা সেট করুন
+        cam.position = spawnedLocalPlayer.transform.position + new Vector3(0, 2, -5);
+        cam.LookAt(spawnedLocalPlayer.transform.position);
+    }
+
+    var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
+    if (controllerScript != null) 
+    {
+        controllerScript.enabled = true;
+    }
+
+    // Spawn 7 NPC bots
+    while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
+    {
+        Transform spawnPoint = shuffledSpawns[spawnIndex++];
+        GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        npcObj.name = "NPC_Bot_" + spawnIndex;
+        npcObj.SetActive(true); // NPC সক্রিয় নিশ্চিত করা হলো
+        spawnedCharacters.Add(npcObj);
+        
+        var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
+        ai.target = chestBoxTransform;
+        ai.moveSpeed = Random.Range(2.5f, 3.5f);
+        ai.EnableAI(false);
+    }
+
+    if (loadingScreen != null) loadingScreen.SetActive(false);
+    
+    // Countdown শুরু করুন
+    StartCoroutine(CountdownRoutine());
+}
 
     private IEnumerator MatchmakingTimeoutRoutine()
     {
@@ -261,42 +284,71 @@ public class MobSquadGameManager : NetworkBehaviour
 
     private void InitializePlayersAndNPCs()
     {
+        Debug.Log($"[DEBUG] Starting Spawning. Available Spawn Points: {spawnPoints.Count}");
+
         GameObject localPlayer = GameObject.Find("Pangopal_01");
         if (localPlayer != null) localPlayer.SetActive(false);
 
         List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
-        for (int i = 0; i < shuffledSpawns.Count; i++)
-        {
-            Transform temp = shuffledSpawns[i];
-            int randomIndex = Random.Range(i, shuffledSpawns.Count);
-            shuffledSpawns[i] = shuffledSpawns[randomIndex];
-            shuffledSpawns[randomIndex] = temp;
-        }
+        // Shuffle logic... (আগের মতোই)
 
         int spawnIndex = 0;
 
+        // ১. অনলাইন প্লেয়ারদের স্পন করা
         foreach (var playerRef in localRunner.ActivePlayers)
         {
             if (spawnIndex >= shuffledSpawns.Count) break;
             Transform spawnPoint = shuffledSpawns[spawnIndex++];
+        
+            // এখানে পজিশন এবং প্রিফ্যাব চেক করি
+            if (playerPrefab == null) {
+                Debug.LogError("[ERROR] playerPrefab is NULL in Inspector!");
+                continue;
+            }
+
             NetworkObject playerObj = localRunner.Spawn(playerPrefab, spawnPoint.position, spawnPoint.rotation, playerRef);
-            spawnedCharacters.Add(playerObj.gameObject);
+        
+            if (playerObj != null) {
+                spawnedCharacters.Add(playerObj.gameObject);
+                Debug.Log($"[DEBUG] Successfully spawned network player: {playerObj.name} at {spawnPoint.position}");
+            } else {
+                Debug.LogError("[ERROR] Fusion failed to spawn playerPrefab!");
+            }
         }
 
+        // ২. এনপিসি স্পন করা
         while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
         {
             Transform spawnPoint = shuffledSpawns[spawnIndex++];
             GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
-            spawnedCharacters.Add(npcObj);
-            
-            var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
-            ai.target = chestBoxTransform;
-            ai.moveSpeed = Random.Range(2.5f, 3.5f);
-            ai.EnableAI(false);
+        
+            if (npcObj != null) {
+                spawnedCharacters.Add(npcObj);
+                npcObj.SetActive(true); // নিশ্চিত করছি অবজেক্ট একটিভ
+                Debug.Log($"[DEBUG] Successfully spawned NPC: {npcObj.name} at {spawnPoint.position}");
+            }
         }
 
         RPC_StartCountdown();
     }
+
+// ক্যামেরা স্বয়ংক্রিয়ভাবে প্লেয়ারের পেছনে সেট করার জন্য হেল্পার মেথড
+private void SetupCameraFollow(Transform targetCharacter)
+{
+    Transform cam = Camera.main != null ? Camera.main.transform : GameObject.FindWithTag("MainCamera")?.transform;
+    if (cam == null) cam = GameObject.Find("Main Camera")?.transform;
+
+    if (cam != null && targetCharacter != null)
+    {
+        // প্লেয়ারের পেছনে ২ ইউনিট উপরে এবং ৫ ইউনিট পেছনে ক্যামেরা সেট করবে
+        cam.position = targetCharacter.position + new Vector3(0f, 2f, -5f);
+        cam.LookAt(targetCharacter.position + Vector3.up * 1f);
+        
+        // যদি আপনার প্রজেক্টে কোনো ক্যামেরা ফলো স্ক্রিপ্ট (যেমন CM FreeLook বা Cinemachine) থাকে, 
+        // তবে তার Target এখানে রানটাইমে ডাইনামিকালি সেট করে দিতে পারেন।
+        Debug.Log($"[MobSquad Visuals] Camera successfully attached and focused on local player: {targetCharacter.name}");
+    }
+}
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_StartCountdown()

@@ -72,5 +72,5 @@
     "UseSerializableDictionary": true,
     "NullChecksForNetworkedProperties": true,
     "CheckRpcAttributeUsage": false,
-    "CheckNetworkedPropertiesBeingEmpty": false
+    "CheckNetworkedPropertiesBeingEmpty": true
 }

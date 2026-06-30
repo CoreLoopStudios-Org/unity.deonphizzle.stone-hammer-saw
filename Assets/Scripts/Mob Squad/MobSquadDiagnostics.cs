@@ -19,7 +19,6 @@ public class MobSquadDiagnostics : MonoBehaviour
     private void OnGUI()
     {
         if (manager == null) return;
-    
         GUILayout.BeginArea(new Rect(10, 10, 300, 200));
         try
         {
@@ -28,14 +27,8 @@ public class MobSquadDiagnostics : MonoBehaviour
             string gameActiveText = "Waiting for Spawned()...";
             if (manager.Object != null && manager.Object.IsValid)
             {
-                try
-                {
-                    gameActiveText = manager.isGameActive.ToString();
-                }
-                catch (System.InvalidOperationException)
-                {
-                    gameActiveText = "Not Spawned";
-                }
+                // Use safe accessor to avoid InvalidOperationException before Spawned
+                gameActiveText = manager.IsGameActiveSafe.ToString();
             }
             GUILayout.Label("Is Game Active: " + gameActiveText);
         
