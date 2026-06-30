@@ -208,54 +208,61 @@ public class MobSquadGameManager : NetworkBehaviour
         InitializePlayersAndNPCsOffline();
     }
 
-   private void InitializePlayersAndNPCsOffline()
+  private void InitializePlayersAndNPCsOffline()
 {
+    // ১. বিদ্যমান ক্যারেক্টার ডিজেবল করা
     GameObject localPlayerObj = GameObject.Find("Pangopal_01");
     if (localPlayerObj != null) localPlayerObj.SetActive(false);
 
-    // Shuffle spawns
+    // ২. স্পন পয়েন্ট সাফল করা
     List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
-    for (int i = 0; i < shuffledSpawns.Count; i++)
-    {
-        Transform temp = shuffledSpawns[i];
-        int randomIndex = Random.Range(i, shuffledSpawns.Count);
-        shuffledSpawns[i] = shuffledSpawns[randomIndex];
-        shuffledSpawns[randomIndex] = temp;
-    }
+    System.Random rng = new System.Random();
+    shuffledSpawns = shuffledSpawns.OrderBy(a => rng.Next()).ToList();
 
     int spawnIndex = 0;
 
-    // Spawn local player offline
-    Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
-    GameObject spawnedLocalPlayer = Instantiate(playerPrefab, localSpawnPoint.position, localSpawnPoint.rotation);
-    spawnedLocalPlayer.name = "Pangopal_01_Spawned";
-    
-    // নিশ্চিত করুন ক্যারেক্টারটি সক্রিয় আছে
-    spawnedLocalPlayer.SetActive(true); 
-    spawnedCharacters.Add(spawnedLocalPlayer);
-
-    // ক্যামেরা সেটআপ: যদি ক্যামেরা থাকে তবে প্লেয়ারকে ফলো করতে বলুন
-    Transform cam = Camera.main?.transform;
-    if (cam != null)
+    // ৩. প্লেয়ার স্পন করা এবং পজিশন ঠিক করা
+    if (spawnIndex < shuffledSpawns.Count)
     {
-        // প্লেয়ারের পজিশন থেকে সামান্য পেছনে ক্যামেরা সেট করুন
-        cam.position = spawnedLocalPlayer.transform.position + new Vector3(0, 2, -5);
-        cam.LookAt(spawnedLocalPlayer.transform.position);
+        Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
+        // Y-axis এ সামান্য উপরে স্পন করছি যেন মাটির সাথে ক্লিপ না করে
+        Vector3 spawnPos = localSpawnPoint.position + Vector3.up * 0.1f; 
+        
+        GameObject spawnedLocalPlayer = Instantiate(playerPrefab, spawnPos, localSpawnPoint.rotation);
+        spawnedLocalPlayer.name = "Pangopal_01_Spawned";
+        spawnedLocalPlayer.SetActive(true); 
+        spawnedCharacters.Add(spawnedLocalPlayer);
+
+        // ৪. ক্যামেরা সেটআপ (Main Camera ফোকাস)
+        Camera mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            // ক্যামেরাকে প্লেয়ারের পেছনে সেট করছি
+            mainCam.transform.position = spawnPos + new Vector3(0, 2, -5);
+            mainCam.transform.LookAt(spawnPos + Vector3.up * 1f);
+            
+            // যদি আপনার কোনো ক্যামেরা ফলো স্ক্রিপ্ট থাকে, সেটি এখানে এনাবল করতে পারেন
+            var camScript = mainCam.GetComponent<CameraFollow>(); // আপনার ক্যামেরা স্ক্রিপ্টের নাম দিন
+            if (camScript != null) 
+            {
+                camScript.target = spawnedLocalPlayer.transform;
+                camScript.enabled = true;
+            }
+        }
+
+        var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
+        if (controllerScript != null) controllerScript.enabled = true;
     }
 
-    var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
-    if (controllerScript != null) 
-    {
-        controllerScript.enabled = true;
-    }
-
-    // Spawn 7 NPC bots
+    // ৫. NPC বট স্পন করা
     while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
     {
         Transform spawnPoint = shuffledSpawns[spawnIndex++];
-        GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        Vector3 npcSpawnPos = spawnPoint.position + Vector3.up * 0.1f;
+
+        GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, npcSpawnPos, spawnPoint.rotation);
         npcObj.name = "NPC_Bot_" + spawnIndex;
-        npcObj.SetActive(true); // NPC সক্রিয় নিশ্চিত করা হলো
+        npcObj.SetActive(true);
         spawnedCharacters.Add(npcObj);
         
         var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
@@ -266,7 +273,7 @@ public class MobSquadGameManager : NetworkBehaviour
 
     if (loadingScreen != null) loadingScreen.SetActive(false);
     
-    // Countdown শুরু করুন
+    // ৬. গেম স্টার্ট
     StartCoroutine(CountdownRoutine());
 }
 
