@@ -33562,9 +33562,8 @@ GameObject:
   - component: {fileID: 2117154450}
   - component: {fileID: 2117154453}
   - component: {fileID: 2117154454}
+  - component: {fileID: 2117154456}
   - component: {fileID: 2117154455}
-  - component: {fileID: 2117154457}
-  - component: {fileID: 2117154458}
   m_Layer: 0
   m_Name: MobSquadGameManager
   m_TagString: Untagged
@@ -33831,19 +33830,7 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &2117154457
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2117154449}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 344b731128acfe04c9061aade9089734, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MobSquadDiagnostics
---- !u!114 &2117154458
+--- !u!114 &2117154456
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -33856,7 +33843,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SquidGameManager
   timeLimit: 60
-  dollMusic: {fileID: 2117154450}
+  dollMusic: {fileID: 2117154455}
   reactionTime: 0.5
   isGreenLight: 0
 --- !u!1001 &2123522077

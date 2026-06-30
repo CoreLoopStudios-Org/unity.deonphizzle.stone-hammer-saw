@@ -37,12 +37,21 @@ public class MobSquadGameManager : NetworkBehaviour
     [Networked] public NetworkBool isMatchOver { get; set; } = false;
     [Networked] public int nextRoundConfirmations { get; set; } = 0;
 
+    private bool isOfflineGameActive = false;
+
     public bool IsGameActiveSafe
     {
         get
         {
-            if (Object == null || !Object.IsValid) return false;
-            return isGameActive;
+            try
+            {
+                if (Object == null || !Object.IsValid) return isOfflineGameActive;
+                return isGameActive;
+            }
+            catch (System.InvalidOperationException)
+            {
+                return isOfflineGameActive;
+            }
         }
     }
 
@@ -61,8 +70,24 @@ public class MobSquadGameManager : NetworkBehaviour
         else Destroy(gameObject);
     }
 
+    public override void Spawned()
+    {
+        base.Spawned();
+        
+        // Hide tap to play panel and show loading screen on all clients who spawned on network
+        if (tapToPlayPanel != null) tapToPlayPanel.SetActive(false);
+        if (loadingScreen != null) loadingScreen.SetActive(true);
+
+        if (Object.HasStateAuthority)
+        {
+            localRunner = Runner; // Cache the current runner
+            StartCoroutine(MatchmakingTimeoutRoutine());
+        }
+    }
+
     private void Start()
     {
+        connectionTimeout = 3f; // Force 3s timeout for matchmaking as requested
         squidManager = FindObjectOfType<SquidGameManager>();
 
         // Auto-assign references if they are empty
@@ -89,6 +114,10 @@ public class MobSquadGameManager : NetworkBehaviour
 
         if (tapToPlayPanel != null)
         {
+            // Remove TapToLoadScene component if it exists to prevent click event conflict
+            var tapToLoad = tapToPlayPanel.GetComponent<TapToLoadScene>();
+            if (tapToLoad != null) Destroy(tapToLoad);
+
             Button panelBtn = tapToPlayPanel.GetComponent<Button>();
             if (panelBtn == null) panelBtn = tapToPlayPanel.AddComponent<Button>();
             panelBtn.onClick.RemoveAllListeners();
@@ -134,23 +163,88 @@ public class MobSquadGameManager : NetworkBehaviour
             localRunner = runnerGo.AddComponent<NetworkRunner>();
         }
 
-        var result = await localRunner.StartGame(new StartGameArgs()
+        try
         {
-            GameMode = GameMode.Shared,
-            SessionName = "MobSquadSession_" + Random.Range(1000, 9999),
-            PlayerCount = 8,
-            Scene = SceneRef.FromIndex(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex),
-            SceneManager = localRunner.gameObject.GetComponent<NetworkSceneManagerDefault>() ?? 
-                           localRunner.gameObject.AddComponent<NetworkSceneManagerDefault>()
-        });
-
-        if (result.Ok)
-        {
-            if (localRunner.IsServer || localRunner.IsSharedModeMasterClient)
+            var result = await localRunner.StartGame(new StartGameArgs()
             {
-                StartCoroutine(MatchmakingTimeoutRoutine());
+                GameMode = GameMode.Shared,
+                SessionName = "MobSquadSession_" + Random.Range(1000, 9999),
+                PlayerCount = 8,
+                Scene = SceneRef.FromIndex(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex),
+                SceneManager = localRunner.gameObject.GetComponent<NetworkSceneManagerDefault>() ?? 
+                               localRunner.gameObject.AddComponent<NetworkSceneManagerDefault>()
+            });
+
+            if (result.Ok)
+            {
+                if (localRunner.IsServer || localRunner.IsSharedModeMasterClient)
+                {
+                    StartCoroutine(MatchmakingTimeoutRoutine());
+                }
+                return;
+            }
+            else
+            {
+                Debug.LogWarning($"[MobSquad] Fusion StartGame failed: {result.ShutdownReason}. Falling back to offline local mode.");
             }
         }
+        catch (System.Exception ex)
+        {
+            Debug.LogException(ex);
+            Debug.LogWarning("[MobSquad] Exception during Fusion StartGame. Falling back to offline local mode.");
+        }
+
+        // Fallback to offline/single player mode
+        StartCoroutine(OfflineStartRoutine());
+    }
+
+    private IEnumerator OfflineStartRoutine()
+    {
+        yield return new WaitForSeconds(1.0f); // Small delay to feel like matchmaking
+        InitializePlayersAndNPCsOffline();
+    }
+
+    private void InitializePlayersAndNPCsOffline()
+    {
+        GameObject localPlayerObj = GameObject.Find("Pangopal_01");
+        if (localPlayerObj != null) localPlayerObj.SetActive(false);
+
+        List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
+        for (int i = 0; i < shuffledSpawns.Count; i++)
+        {
+            Transform temp = shuffledSpawns[i];
+            int randomIndex = Random.Range(i, shuffledSpawns.Count);
+            shuffledSpawns[i] = shuffledSpawns[randomIndex];
+            shuffledSpawns[randomIndex] = temp;
+        }
+
+        int spawnIndex = 0;
+
+        // Spawn local player offline
+        Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
+        GameObject spawnedLocalPlayer = Instantiate(playerPrefab, localSpawnPoint.position, localSpawnPoint.rotation);
+        spawnedLocalPlayer.name = "Pangopal_01_Spawned";
+        spawnedCharacters.Add(spawnedLocalPlayer);
+
+        var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
+        if (controllerScript != null) controllerScript.enabled = true;
+
+        // Spawn 7 NPC bots
+        while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
+        {
+            Transform spawnPoint = shuffledSpawns[spawnIndex++];
+            GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
+            npcObj.name = "NPC_Bot_" + spawnIndex;
+            spawnedCharacters.Add(npcObj);
+            
+            var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
+            ai.target = chestBoxTransform;
+            ai.moveSpeed = Random.Range(2.5f, 3.5f);
+            ai.EnableAI(false);
+        }
+
+        if (loadingScreen != null) loadingScreen.SetActive(false);
+        StartCoroutine(CountdownRoutine());
     }
 
     private IEnumerator MatchmakingTimeoutRoutine()
@@ -225,38 +319,55 @@ public class MobSquadGameManager : NetworkBehaviour
 
         if (squidManager != null) squidManager.StartMiniGame();
 
-        if (Object != null && Object.HasStateAuthority)
+        if (Object != null && Object.IsValid && Object.HasStateAuthority)
         {
             isGameActive = true;
-            foreach (var charGo in spawnedCharacters)
+        }
+        else
+        {
+            isOfflineGameActive = true;
+        }
+
+        foreach (var charGo in spawnedCharacters)
+        {
+            if (charGo != null)
             {
-                if (charGo != null)
-                {
-                    var ai = charGo.GetComponent<NPCSquadAI>();
-                    if (ai != null) ai.EnableAI(true);
-                }
+                var ai = charGo.GetComponent<NPCSquadAI>();
+                if (ai != null) ai.EnableAI(true);
             }
         }
     }
 
     public void OnLocalPlayerEliminated()
     {
-        isGameActive = false;
+        if (Object != null && Object.IsValid)
+        {
+            isGameActive = false;
+        }
+        else
+        {
+            isOfflineGameActive = false;
+        }
         if (lossPanel != null) lossPanel.SetActive(true);
     }
 
     public void OnPlayerReachedBox(GameObject characterGo)
     {
-        if (Object != null && !Object.HasStateAuthority) return;
+        if (Object != null && Object.IsValid && !Object.HasStateAuthority) return;
         
-        bool active = (Object != null && Object.IsValid) ? (bool)isGameActive : true;
+        bool active = IsGameActiveSafe;
         if (!active) return;
 
         if (Object != null && Object.IsValid)
         {
             isGameActive = false;
+            RPC_StopLocalMiniGame();
         }
-        RPC_StopLocalMiniGame();
+        else
+        {
+            isOfflineGameActive = false;
+            if (squidManager != null) squidManager.StopMiniGame();
+        }
         
         var netObj = characterGo.GetComponent<NetworkObject>();
         if (netObj != null && netObj.IsValid)
@@ -273,7 +384,24 @@ public class MobSquadGameManager : NetworkBehaviour
             else
             {
                 if (chestSeq != null) chestSeq.PlayOpeningSequence();
+                
+                // Show offline result panels after a short delay
+                bool isLocalPlayer = (characterGo.name == "Pangopal_01_Spawned");
+                StartCoroutine(ShowOfflineResultPanels(isLocalPlayer));
             }
+        }
+    }
+
+    private IEnumerator ShowOfflineResultPanels(bool isWinnerLocal)
+    {
+        yield return new WaitForSeconds(2.0f);
+        if (isWinnerLocal)
+        {
+            if (winPanel != null) winPanel.SetActive(true);
+        }
+        else
+        {
+            if (lossPanel != null) lossPanel.SetActive(true);
         }
     }
 

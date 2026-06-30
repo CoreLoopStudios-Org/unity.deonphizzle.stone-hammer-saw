@@ -104,64 +104,76 @@ public class SquidGameManager : MonoBehaviour
     }
 
     private void Update()
+{
+    // ১. প্রথমে চেক করি ম্যানেজার আছে কি না।
+    if (MobSquadGameManager.Instance == null) return;
+
+    // ২. ম্যানেজার থেকে গেমিং স্ট্যাটাস চেক করি। 
+    // যদি গেমটি নেটওয়ার্কে একটিভ না থাকে, তবে টাইমার বা মুভমেন্ট চেক করার প্রয়োজন নেই।
+    if (!MobSquadGameManager.Instance.IsGameActiveSafe) 
     {
-        if (MobSquadGameManager.Instance == null || !MobSquadGameManager.Instance.IsGameActiveSafe) return;
+        // গেম এখনো শুরু হয়নি, তাই কোনো লজিক রান করবে না।
+        return; 
+    }
 
-        timeLimit -= Time.deltaTime;
-        int currentSec = Mathf.Max(0, Mathf.CeilToInt(timeLimit));
-        if (currentSec != lastSec)
+    // ৩. গেম যখন একটিভ, তখন টাইমার এবং রেড লাইট লজিক কাজ করবে।
+    timeLimit -= Time.deltaTime;
+    
+    int currentSec = Mathf.Max(0, Mathf.CeilToInt(timeLimit));
+    if (currentSec != lastSec)
+    {
+        lastSec = currentSec;
+        if (timerText != null)
         {
-            lastSec = currentSec;
-            if (timerText != null)
+            timerText.text = "Time: " + currentSec + "s";
+            timerText.transform.DOKill();
+            timerText.transform.localScale = Vector3.one;
+            if (timeLimit <= 10f)
             {
-                timerText.text = "Time: " + currentSec + "s";
-                timerText.transform.DOKill();
-                timerText.transform.localScale = Vector3.one;
-                if (timeLimit <= 10f)
-                {
-                    timerText.color = Color.red;
-                    timerText.transform.DOPunchScale(Vector3.one * 0.25f, 0.25f, 5, 1f);
-                }
-                else
-                {
-                    timerText.color = Color.white;
-                    timerText.transform.DOPunchScale(Vector3.one * 0.08f, 0.2f, 2, 1f);
-                }
-            }
-        }
-
-        if (timeLimit <= 0)
-        {
-            EliminatePlayer("Time is up!");
-            return;
-        }
-
-        lightTimer -= Time.deltaTime;
-        if (lightTimer <= 0)
-        {
-            if (isGreenLight) SwitchToRedLight();
-            else SwitchToGreenLight();
-        }
-
-        if (!isGreenLight)
-        {
-            if (currentReactionTime > 0)
-            {
-                currentReactionTime -= Time.deltaTime;
+                timerText.color = Color.red;
+                timerText.transform.DOPunchScale(Vector3.one * 0.25f, 0.25f, 5, 1f);
             }
             else
             {
-                // Joystick movement check
-                float moveInput = SimpleMobileJoystick.InputDirection.magnitude; 
-                bool pcMovement = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
-
-                if (moveInput > 0.1f || pcMovement)
-                {
-                    EliminatePlayer("Moved during RED LIGHT!");
-                }
+                timerText.color = Color.white;
+                timerText.transform.DOPunchScale(Vector3.one * 0.08f, 0.2f, 2, 1f);
             }
         }
     }
+
+    if (timeLimit <= 0)
+    {
+        EliminatePlayer("Time is up!");
+        return;
+    }
+
+    // ৪. লাইট ট্রানজিশন এবং মুভমেন্ট চেক
+    lightTimer -= Time.deltaTime;
+    if (lightTimer <= 0)
+    {
+        if (isGreenLight) SwitchToRedLight();
+        else SwitchToGreenLight();
+    }
+
+    if (!isGreenLight)
+    {
+        if (currentReactionTime > 0)
+        {
+            currentReactionTime -= Time.deltaTime;
+        }
+        else
+        {
+            // SimpleMobileJoystick নিশ্চিত করুন আপনার প্রজেক্টে আছে
+            float moveInput = SimpleMobileJoystick.InputDirection.magnitude; 
+            bool pcMovement = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
+
+            if (moveInput > 0.1f || pcMovement)
+            {
+                EliminatePlayer("Moved during RED LIGHT!");
+            }
+        }
+    }
+}
 
     private void SwitchToGreenLight()
     {

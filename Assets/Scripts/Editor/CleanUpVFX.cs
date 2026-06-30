@@ -57,15 +57,21 @@ public static class CleanUpVFX
             }
         }
 
-        // 3. Replace SquidGameManager with MobSquadGameManager on the manager GameObject
+        // 3. Ensure both SquidGameManager and MobSquadGameManager are on the manager GameObject
         GameObject managerObj = GameObject.Find("MobSquadGameManager");
         if (managerObj != null)
         {
             SquidGameManager squidMgr = managerObj.GetComponent<SquidGameManager>();
-            if (squidMgr != null)
+            if (squidMgr == null)
             {
-                Object.DestroyImmediate(squidMgr);
-                Debug.LogWarning("[CleanUpVFX] Removed SquidGameManager component from MobSquadGameManager GameObject.");
+                squidMgr = managerObj.AddComponent<SquidGameManager>();
+                Debug.LogWarning("[CleanUpVFX] Added SquidGameManager component to MobSquadGameManager GameObject.");
+            }
+
+            if (squidMgr.dollMusic == null)
+            {
+                squidMgr.dollMusic = managerObj.GetComponent<AudioSource>();
+                Debug.LogWarning("[CleanUpVFX] Auto-assigned dollMusic AudioSource to SquidGameManager.");
             }
 
             MobSquadGameManager mobSquadMgr = managerObj.GetComponent<MobSquadGameManager>();

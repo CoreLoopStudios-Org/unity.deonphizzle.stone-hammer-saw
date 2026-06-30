@@ -48,6 +48,11 @@ public class ThirdPersonCharacterController : MonoBehaviour
         {
             cameraTransform = Camera.main.transform;
         }
+        if (touchBlockPanel == null)
+        {
+            GameObject panelObj = GameObject.Find("Controller Bckground");
+            if (panelObj != null) touchBlockPanel = panelObj.GetComponent<RectTransform>();
+        }
         yaw = transform.eulerAngles.y; 
 
         // 1. If this is an NPC/Bot character, disable this controller script
@@ -78,9 +83,13 @@ public class ThirdPersonCharacterController : MonoBehaviour
         bool canMove = true;
         if (MobSquadGameManager.Instance != null)
         {
-            if (!MobSquadGameManager.Instance.IsGameActiveSafe)
+            var netObj = MobSquadGameManager.Instance.GetComponent<Fusion.NetworkObject>();
+            if (netObj != null && netObj.IsValid)
             {
-                canMove = false;
+                if (!MobSquadGameManager.Instance.IsGameActiveSafe)
+                {
+                    canMove = false;
+                }
             }
         }
 
