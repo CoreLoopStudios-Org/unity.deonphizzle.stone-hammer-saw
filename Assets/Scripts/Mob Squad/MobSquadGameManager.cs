@@ -623,10 +623,19 @@ public class MobSquadGameManager : NetworkBehaviour
         foreach (var charGo in spawnedCharacters)
         {
             if (charGo == null) continue;
-            Transform spawnPoint = shuffledSpawns[spawnIndex++];
+
+            // ১. ক্র্যাশ ঠেকানোর জন্য সেফ ইন্ডেক্সিং (যদি ক্যারেক্টার বেশিও থাকে, ক্র্যাশ করবে না)
+            Transform spawnPoint = shuffledSpawns[spawnIndex % shuffledSpawns.Count];
+            spawnIndex++;
+
+            // ২. ক্যারেক্টারকে নতুন জায়গায় নিতে হলে আগে CharacterController অফ করতে হয়
+            var cc = charGo.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+
             charGo.transform.position = spawnPoint.position;
             charGo.transform.rotation = spawnPoint.rotation;
-            charGo.transform.localScale = Vector3.one;
+
+            if (cc != null) cc.enabled = true; // পজিশন বদলানোর পর আবার অন করা হলো
 
             var ai = charGo.GetComponent<NPCSquadAI>();
             if (ai != null) ai.EnableAI(false);
@@ -646,16 +655,40 @@ public class NPCSquadAI : MonoBehaviour
     public Transform target;
     public float moveSpeed = 3f;
     private bool aiActive = false;
+    private CharacterController cc;
+
+    private void Awake()
+    {
+        // শুরুর দিকেই CharacterController খুঁজে নিচ্ছি
+        cc = GetComponent<CharacterController>();
+    }
 
     public void EnableAI(bool active) { aiActive = active; }
 
     private void Update()
     {
         if (!aiActive || target == null) return;
-        Vector3 targetPos = target.position;
-        targetPos.y = transform.position.y; 
-        transform.LookAt(targetPos);
-        transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+        
+        // টার্গেটের দিকে ঘোরার দিক নির্ণয়
+        Vector3 direction = (target.position - transform.position).normalized;
+        direction.y = 0; // শুধু মাটির সমান্তরালে দৌড়াবে
+        
+        if (direction != Vector3.zero)
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
+        }
+
+        // সঠিক মুভমেন্ট লজিক
+        if (cc != null)
+        {
+            // SimpleMove অটোমেটিক গ্র্যাভিটি এবং কলাইডার হ্যান্ডেল করে
+            cc.SimpleMove(direction * moveSpeed);
+        }
+        else
+        {
+            // ফলব্যাক মুভমেন্ট
+            transform.position += direction * moveSpeed * Time.deltaTime;
+        }
 
         Animator anim = GetComponent<Animator>();
         if (anim != null) anim.SetFloat("Speed", moveSpeed);
