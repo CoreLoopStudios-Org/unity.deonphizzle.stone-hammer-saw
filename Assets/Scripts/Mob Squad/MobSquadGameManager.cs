@@ -60,7 +60,7 @@ public class MobSquadGameManager : NetworkBehaviour
     private bool hasConfirmedNextRound = false;
     private bool matchmakingActive = false;
     private NetworkRunner localRunner;
-    
+    private bool isSpawningStarted = false; // এটি ডাবল স্পন ঠেকাবে
     private SquidGameManager squidManager;
     private GameObject loadingScreen;
 
@@ -86,6 +86,9 @@ public class MobSquadGameManager : NetworkBehaviour
     private void Start()
     {
         connectionTimeout = 3f; 
+        // কোড থেকে জোড় করে ৮ সেট করে দেওয়া হলো যেন ১৫ জন স্পন না হয়
+        totalPlayersGoal = 8; 
+        
         squidManager = FindObjectOfType<SquidGameManager>();
         
         if (spawnLineParent == null)
@@ -101,10 +104,6 @@ public class MobSquadGameManager : NetworkBehaviour
             {
                 spawnPoints.Add(child);
             }
-        }
-        else
-        {
-            Debug.LogError("[MobSquad] Spawn-Green-Line খুঁজে পাওয়া যায়নি! হায়ারার্কিতে এই নামের অবজেক্ট আছে কি?");
         }
         
         if (chestBoxTransform == null)
@@ -184,15 +183,10 @@ public class MobSquadGameManager : NetworkBehaviour
                 }
                 return;
             }
-            else
-            {
-                Debug.LogWarning($"[MobSquad] Fusion StartGame failed: {result.ShutdownReason}. Falling back to offline local mode.");
-            }
         }
         catch (System.Exception ex)
         {
             Debug.LogException(ex);
-            Debug.LogWarning("[MobSquad] Exception during Fusion StartGame. Falling back to offline local mode.");
         }
 
         StartCoroutine(OfflineStartRoutine());
@@ -200,6 +194,10 @@ public class MobSquadGameManager : NetworkBehaviour
 
     private IEnumerator OfflineStartRoutine()
     {
+        // অফলাইনেও যেন ডাবল স্পন না হয়
+        if (isSpawningStarted) yield break; 
+        isSpawningStarted = true;
+
         yield return new WaitForSeconds(1.0f);
         InitializePlayersAndNPCsOffline();
     }
@@ -209,14 +207,17 @@ public class MobSquadGameManager : NetworkBehaviour
         GameObject localPlayerObj = GameObject.Find("Pangopal_01");
         if (localPlayerObj != null) localPlayerObj.SetActive(false);
 
+        spawnedCharacters.Clear(); // লিস্ট ক্লিয়ার করা হলো যেন ডাবল স্পন না হয়
+
         List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
         System.Random rng = new System.Random();
         shuffledSpawns = shuffledSpawns.OrderBy(a => rng.Next()).ToList();
 
         int spawnIndex = 0;
+        int maxSpawns = Mathf.Min(totalPlayersGoal, shuffledSpawns.Count);
 
         // লোকাল প্লেয়ার স্পন
-        if (spawnIndex < shuffledSpawns.Count)
+        if (spawnIndex < maxSpawns)
         {
             Transform localSpawnPoint = shuffledSpawns[spawnIndex++];
             Vector3 spawnPos = localSpawnPoint.position + Vector3.up * 0.1f; 
@@ -226,15 +227,22 @@ public class MobSquadGameManager : NetworkBehaviour
             spawnedLocalPlayer.SetActive(true); 
             spawnedCharacters.Add(spawnedLocalPlayer);
 
+            // বক্সের দিকে ঘুরিয়ে দেওয়া
+            if (chestBoxTransform != null)
+            {
+                Vector3 lookPos = chestBoxTransform.position;
+                lookPos.y = spawnedLocalPlayer.transform.position.y;
+                spawnedLocalPlayer.transform.LookAt(lookPos);
+            }
+
             SetupCameraFollow(spawnedLocalPlayer.transform);
 
-            // কাউন্টডাউন শেষ না হওয়া পর্যন্ত কন্ট্রোলার ডিজেবল রাখা হলো
             var controllerScript = spawnedLocalPlayer.GetComponent<ThirdPersonCharacterController>();
             if (controllerScript != null) controllerScript.enabled = false; 
         }
 
         // NPC স্পন
-        while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
+        while (spawnIndex < maxSpawns)
         {
             Transform spawnPoint = shuffledSpawns[spawnIndex++];
             Vector3 npcSpawnPos = spawnPoint.position + Vector3.up * 0.1f;
@@ -246,8 +254,8 @@ public class MobSquadGameManager : NetworkBehaviour
             
             var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
             ai.target = chestBoxTransform;
-            ai.moveSpeed = Random.Range(2.5f, 3.5f);
-            ai.EnableAI(false); // কাউন্টডাউনের আগে দৌড়াবে না
+            ai.baseMoveSpeed = Random.Range(2.5f, 3.5f); // ভেরিয়েবল আপডেট করা হলো
+            ai.EnableAI(false);
         }
 
         if (loadingScreen != null) loadingScreen.SetActive(false);
@@ -256,6 +264,10 @@ public class MobSquadGameManager : NetworkBehaviour
 
     private IEnumerator MatchmakingTimeoutRoutine()
     {
+        // যদি স্পনিং আগে থেকেই শুরু হয়ে থাকে, তবে এই কোড আর রান করবে না
+        if (isSpawningStarted) yield break; 
+        isSpawningStarted = true;
+
         float timer = 0f;
         while (timer < connectionTimeout)
         {
@@ -271,16 +283,18 @@ public class MobSquadGameManager : NetworkBehaviour
         GameObject localPlayer = GameObject.Find("Pangopal_01");
         if (localPlayer != null) localPlayer.SetActive(false);
 
+        spawnedCharacters.Clear();
+
         List<Transform> shuffledSpawns = new List<Transform>(spawnPoints);
         System.Random rng = new System.Random();
         shuffledSpawns = shuffledSpawns.OrderBy(a => rng.Next()).ToList();
 
         int spawnIndex = 0;
+        int maxSpawns = Mathf.Min(totalPlayersGoal, shuffledSpawns.Count);
 
-        // ১. অনলাইন প্লেয়ারদের স্পন করা
         foreach (var playerRef in localRunner.ActivePlayers)
         {
-            if (spawnIndex >= shuffledSpawns.Count) break;
+            if (spawnIndex >= maxSpawns) break;
             Transform spawnPoint = shuffledSpawns[spawnIndex++];
         
             if (playerPrefab == null) continue;
@@ -291,20 +305,24 @@ public class MobSquadGameManager : NetworkBehaviour
             {
                 spawnedCharacters.Add(playerObj.gameObject);
 
-                // যদি এই ক্যারেক্টারটি লোকাল প্লেয়ারের হয়, তবে ক্যামেরা ফোকাস করি
+                if (chestBoxTransform != null)
+                {
+                    Vector3 lookPos = chestBoxTransform.position;
+                    lookPos.y = playerObj.transform.position.y;
+                    playerObj.transform.LookAt(lookPos);
+                }
+
                 if (playerRef == localRunner.LocalPlayer)
                 {
                     SetupCameraFollow(playerObj.transform);
                 }
 
-                // কাউন্টডাউন শেষ না হওয়া পর্যন্ত জয়স্টিক ডিজেবল রাখা হলো
                 var controllerScript = playerObj.GetComponent<ThirdPersonCharacterController>();
                 if (controllerScript != null) controllerScript.enabled = false;
             }
         }
 
-        // ২. ৮ জন পূর্ণ না হলে বাকি স্পট বট দিয়ে পূরণ করা
-        while (spawnIndex < totalPlayersGoal && spawnIndex < shuffledSpawns.Count)
+        while (spawnIndex < maxSpawns)
         {
             Transform spawnPoint = shuffledSpawns[spawnIndex++];
             GameObject npcObj = Instantiate(npcPrefab != null ? npcPrefab : playerPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -316,8 +334,8 @@ public class MobSquadGameManager : NetworkBehaviour
                 
                 var ai = npcObj.GetComponent<NPCSquadAI>() ?? npcObj.AddComponent<NPCSquadAI>();
                 ai.target = chestBoxTransform;
-                ai.moveSpeed = Random.Range(2.5f, 3.5f);
-                ai.EnableAI(false); // কাউন্টডাউনের আগে দৌড়াবে না
+                ai.baseMoveSpeed = Random.Range(2.5f, 3.5f); // ভেরিয়েবল আপডেট করা হলো
+                ai.EnableAI(false); 
             }
         }
 
@@ -345,48 +363,35 @@ public class MobSquadGameManager : NetworkBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        // 3, 2, 1 কাউন্টডাউন
         for (int i = 3; i > 0; i--)
         {
             if (squidManager != null) squidManager.AnimateStatusText(i.ToString(), Color.yellow, 1.5f);
             yield return new WaitForSeconds(1f);
         }
 
-        // GO টেক্সট এবং মিউজিক শুরু
         if (squidManager != null) 
         {
             squidManager.AnimateStatusText("GO!", Color.green, 2.0f);
-            squidManager.StartMiniGame(); // এটি আপনার SquidGameManager-এর ভেতর মিউজিক এবং টাইমার শুরু করবে
+            squidManager.StartMiniGame(); 
         }
         
         yield return new WaitForSeconds(0.8f);
         if (squidManager != null) squidManager.HideStatusText();
 
-        // গেম স্ট্যাটাস Active করা হলো
-        if (Object != null && Object.IsValid && Object.HasStateAuthority)
-        {
-            isGameActive = true;
-        }
-        else
-        {
-            isOfflineGameActive = true;
-        }
+        if (Object != null && Object.IsValid && Object.HasStateAuthority) isGameActive = true;
+        else isOfflineGameActive = true;
 
-        // গেম শুরু হওয়ার পর সব প্লেয়ার ও বটের মুভমেন্ট এনাবল করা
         foreach (var charGo in spawnedCharacters)
         {
             if (charGo == null) continue;
 
-            // বট হলে AI এনাবল করে দৌড়ানো শুরু করানো
             var ai = charGo.GetComponent<NPCSquadAI>();
             if (ai != null) ai.EnableAI(true);
 
-            // প্লেয়ার হলে জয়স্টিক কন্ট্রোলার এনাবল করা
             var controller = charGo.GetComponent<ThirdPersonCharacterController>();
             if (controller != null)
             {
                 var netObj = charGo.GetComponent<NetworkObject>();
-                // অফলাইন মোড অথবা যদি এই ক্যারেক্টারটি বর্তমান প্লেয়ারের নিজের হয়, তবেই জয়স্টিক কাজ করবে
                 if (netObj == null || netObj.HasInputAuthority || netObj.HasStateAuthority)
                 {
                     controller.enabled = true;
@@ -624,18 +629,27 @@ public class MobSquadGameManager : NetworkBehaviour
         {
             if (charGo == null) continue;
 
-            // ১. ক্র্যাশ ঠেকানোর জন্য সেফ ইন্ডেক্সিং (যদি ক্যারেক্টার বেশিও থাকে, ক্র্যাশ করবে না)
             Transform spawnPoint = shuffledSpawns[spawnIndex % shuffledSpawns.Count];
             spawnIndex++;
 
-            // ২. ক্যারেক্টারকে নতুন জায়গায় নিতে হলে আগে CharacterController অফ করতে হয়
             var cc = charGo.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
 
             charGo.transform.position = spawnPoint.position;
-            charGo.transform.rotation = spawnPoint.rotation;
+            
+            // নতুন রাউন্ডেও যেন বক্সের দিকে তাকিয়ে থাকে
+            if (chestBoxTransform != null)
+            {
+                Vector3 lookPos = chestBoxTransform.position;
+                lookPos.y = charGo.transform.position.y;
+                charGo.transform.LookAt(lookPos);
+            }
+            else
+            {
+                charGo.transform.rotation = spawnPoint.rotation;
+            }
 
-            if (cc != null) cc.enabled = true; // পজিশন বদলানোর পর আবার অন করা হলো
+            if (cc != null) cc.enabled = true; 
 
             var ai = charGo.GetComponent<NPCSquadAI>();
             if (ai != null) ai.EnableAI(false);
@@ -650,47 +664,85 @@ public class MobSquadGameManager : NetworkBehaviour
     }
 }
 
+// র‍্যান্ডম মুভমেন্ট এবং রোটেশনের জন্য আপডেটেড AI ক্লাস
 public class NPCSquadAI : MonoBehaviour
 {
     public Transform target;
-    public float moveSpeed = 3f;
+    public float baseMoveSpeed = 3f;
+    
+    private float currentSpeed;
     private bool aiActive = false;
     private CharacterController cc;
+    private float randomStartDelay;
 
     private void Awake()
     {
-        // শুরুর দিকেই CharacterController খুঁজে নিচ্ছি
         cc = GetComponent<CharacterController>();
+        randomStartDelay = Random.Range(0.1f, 1.2f); 
+        currentSpeed = baseMoveSpeed;
     }
 
-    public void EnableAI(bool active) { aiActive = active; }
+    private void Start()
+    {
+        if (target != null)
+        {
+            Vector3 lookPos = target.position;
+            lookPos.y = transform.position.y; 
+            transform.LookAt(lookPos);
+        }
+    }
+
+    public void EnableAI(bool active) 
+    { 
+        if (active) 
+        {
+            StartCoroutine(StartMovingWithDelay());
+        }
+        else 
+        {
+            aiActive = false;
+            StopAllCoroutines();
+        }
+    }
+
+    private IEnumerator StartMovingWithDelay()
+    {
+        yield return new WaitForSeconds(randomStartDelay);
+        aiActive = true;
+        StartCoroutine(RandomizeSpeedRoutine());
+    }
+
+    private IEnumerator RandomizeSpeedRoutine()
+    {
+        while (aiActive)
+        {
+            currentSpeed = baseMoveSpeed + Random.Range(-0.8f, 1.5f);
+            yield return new WaitForSeconds(Random.Range(1f, 3f));
+        }
+    }
 
     private void Update()
     {
         if (!aiActive || target == null) return;
         
-        // টার্গেটের দিকে ঘোরার দিক নির্ণয়
         Vector3 direction = (target.position - transform.position).normalized;
-        direction.y = 0; // শুধু মাটির সমান্তরালে দৌড়াবে
+        direction.y = 0; 
         
         if (direction != Vector3.zero)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * 10f);
         }
 
-        // সঠিক মুভমেন্ট লজিক
         if (cc != null)
         {
-            // SimpleMove অটোমেটিক গ্র্যাভিটি এবং কলাইডার হ্যান্ডেল করে
-            cc.SimpleMove(direction * moveSpeed);
+            cc.SimpleMove(direction * currentSpeed);
         }
         else
         {
-            // ফলব্যাক মুভমেন্ট
-            transform.position += direction * moveSpeed * Time.deltaTime;
+            transform.position += direction * currentSpeed * Time.deltaTime;
         }
 
         Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetFloat("Speed", moveSpeed);
+        if (anim != null) anim.SetFloat("Speed", currentSpeed);
     }
 }
