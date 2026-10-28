@@ -2153,59 +2153,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 732366642}
   m_CullTransparentMesh: 1
---- !u!1 &741895076
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 741895078}
-  - component: {fileID: 741895077}
-  m_Layer: 0
-  m_Name: Gyro Ui  Handler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &741895077
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 741895076}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 026d636a2f13b984095df024b56e1120, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game3.GyroUIHandler
-  gyroDetector: {fileID: 1066180680}
-  stillnessSlider: {fileID: 1512515144}
-  stillnessCountdownText: {fileID: 309969011}
-  statusText: {fileID: 1042549297}
-  countdownText: {fileID: 138362493}
-  startMessage: Place phone flat on surface...
-  holdingMessage: Hold still...
-  wrongAngleMessage: Place phone flat
-  stillnessLostMessage: Hold still...
---- !u!4 &741895078
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 741895076}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &884071954
 GameObject:
   m_ObjectHideFlags: 0
@@ -2860,202 +2807,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1055069998}
   m_CullTransparentMesh: 1
---- !u!1 &1066180678
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1066180679}
-  - component: {fileID: 1066180680}
-  m_Layer: 0
-  m_Name: GyroDetector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1066180679
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1066180678}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1066180680
+--- !u!114 &1066180680 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+  m_PrefabInstance: {fileID: 5354327500074597084}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1066180678}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f11f2d86f3c2edf47b5bd3a73a2fda83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game3.GyroDetector
-  onDetectionStarted:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1340316965}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  onStillnessProgress:
-    m_PersistentCalls:
-      m_Calls: []
-  onPhoneStable:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 2147452022}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 931829984}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  onStillnessLost:
-    m_PersistentCalls:
-      m_Calls: []
-  onCountdownStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  onCountdownTick:
-    m_PersistentCalls:
-      m_Calls: []
-  onCountdownComplete:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1426895875}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-      - m_Target: {fileID: 931829984}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onPickupSuccess:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 931829984}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  onEarlyPickup:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 131810983}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  onPickupWindowExpired:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 131810983}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  onTooLate:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 131810983}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-  editorTestMode: 0
-  debugMode: 1
-  stillnessThresholdTime: 3
-  stillnessSensitivity: 0.5
-  targetAngle: 90
-  angleTolerance: 15
-  countdownDuration: 3
-  pickupWindowDuration: 5
-  pickupGyroThreshold: 1
-  pickupAccelThreshold: 0.5
-  pickupAngleMultiplier: 2
 --- !u!1 &1147131698
 GameObject:
   m_ObjectHideFlags: 0
@@ -8435,6 +8197,83 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8946126593998514952}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &4220526662641186497
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 367043355518400843, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_Name
+      value: Gyro Ui  Handler
+      objectReference: {fileID: 0}
+    - target: {fileID: 1795335551738081115, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: statusText
+      value: 
+      objectReference: {fileID: 1042549297}
+    - target: {fileID: 1795335551738081115, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: gyroDetector
+      value: 
+      objectReference: {fileID: 1066180680}
+    - target: {fileID: 1795335551738081115, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: countdownText
+      value: 
+      objectReference: {fileID: 138362493}
+    - target: {fileID: 1795335551738081115, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: stillnessSlider
+      value: 
+      objectReference: {fileID: 1512515144}
+    - target: {fileID: 1795335551738081115, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: stillnessCountdownText
+      value: 
+      objectReference: {fileID: 309969011}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2231571516883514264, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 759d102adcdb29948b3c1c67369ce16a, type: 3}
 --- !u!1 &4251148291872090568
 GameObject:
   m_ObjectHideFlags: 0
@@ -9467,6 +9306,99 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1001 &5354327500074597084
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1747030173856932014, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onTooLate.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 131810983}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onEarlyPickup.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 131810983}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onPhoneStable.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 2147452022}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onPhoneStable.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 931829984}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onPickupSuccess.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 931829984}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onDetectionStarted.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1340316965}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onCountdownComplete.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1426895875}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onCountdownComplete.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 931829984}
+    - target: {fileID: 6389156752847818069, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: onPickupWindowExpired.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 131810983}
+    - target: {fileID: 7434427455364554600, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
+      propertyPath: m_Name
+      value: GyroDetector
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e2cf9e949af107148ac43e5106e3ad56, type: 3}
 --- !u!4 &5377029367754556801
 Transform:
   m_ObjectHideFlags: 0
@@ -12788,5 +12720,5 @@ SceneRoots:
   - {fileID: 543450652663655131}
   - {fileID: 543450651831539929}
   - {fileID: 1954032627}
-  - {fileID: 1066180679}
-  - {fileID: 741895078}
+  - {fileID: 5354327500074597084}
+  - {fileID: 4220526662641186497}
