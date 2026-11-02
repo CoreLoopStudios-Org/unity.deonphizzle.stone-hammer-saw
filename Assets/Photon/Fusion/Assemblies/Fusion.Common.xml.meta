@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 34d443d4f2f4b48628cfda74062712f2
+guid: 075a9cbfdc8a1458f894dfda9eb3d9e7
 labels:
 - FusionCodeDoc
 TextScriptImporter:
@@ -10,7 +10,7 @@ TextScriptImporter:
 AssetOrigin:
   serializedVersion: 1
   productId: 267958
-  packageName: Photon Fusion
-  packageVersion: 2.0.12
+  packageName: Photon Fusion - Multiplayer SDK
+  packageVersion: 2.1.3
   assetPath: Assets/Photon/Fusion/Assemblies/Fusion.Common.xml
-  uploadId: 888248
+  uploadId: 1001324

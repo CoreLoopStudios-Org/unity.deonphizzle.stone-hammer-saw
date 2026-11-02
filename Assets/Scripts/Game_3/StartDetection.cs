@@ -7,6 +7,12 @@ public class StartDetection : MonoBehaviour
 
     private void Start()
     {
+        if (gyroDetector == null)
+        {
+            Debug.LogWarning("[StartDetection] GyroDetector not assigned");
+            return;
+        }
+
         gyroDetector.StartDetection();
     }
 }

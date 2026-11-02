@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f5c7850dc19194141a6b63f9148fd291
+guid: e8e973b47d25a416381ef85a3de2464a
 DefaultImporter:
   externalObjects: {}
   userData: 
@@ -8,7 +8,7 @@ DefaultImporter:
 AssetOrigin:
   serializedVersion: 1
   productId: 267958
-  packageName: Photon Fusion
-  packageVersion: 2.0.12
+  packageName: Photon Fusion - Multiplayer SDK
+  packageVersion: 2.1.3
   assetPath: Assets/Photon/Fusion/Assemblies/Release/Fusion.Log.dll.release
-  uploadId: 888248
+  uploadId: 1001324

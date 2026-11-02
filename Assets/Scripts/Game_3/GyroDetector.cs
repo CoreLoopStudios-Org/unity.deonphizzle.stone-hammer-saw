@@ -59,8 +59,8 @@ namespace Game3
         [Tooltip("Maximum allowed movement to be considered 'still'")]
         public float stillnessSensitivity = 0.5f;
 
-        [Tooltip("Target angle: 0° = flat on table (screen up), 90° = vertical standing")]
-        public float targetAngle = 0f;
+        [Tooltip("Target tilt in degrees: 90 = lying flat on a table, 0 = standing upright in portrait")]
+        public float targetAngle = 90f;
 
         [Tooltip("Allowed deviation from target angle (± degrees)")]
         public float angleTolerance = 15f;
@@ -93,6 +93,8 @@ namespace Game3
         private float _countdownEndTime;
         private Vector3 _lastGyroRotation;
         private Vector3 _lastAcceleration;
+        private bool _windowExpiredNotified;
+        private bool _gyroEnabledByThis;
 
         #endregion
 
@@ -118,7 +120,7 @@ namespace Game3
 
         private void OnDestroy()
         {
-            if (Input.gyro.enabled) Input.gyro.enabled = false;
+            if (_gyroEnabledByThis && Input.gyro.enabled) Input.gyro.enabled = false;
         }
 
         #endregion
@@ -130,7 +132,9 @@ namespace Game3
         /// </summary>
         public void StartDetection()
         {
-            if (CurrentState != GyroState.Idle && CurrentState != GyroState.Completed && CurrentState != GyroState.Eliminated)
+            // After the pickup window expired with no pickup, allow a fresh start
+            bool canRestart = CurrentState == GyroState.ReadyForPickup && _windowExpiredNotified;
+            if (!canRestart && CurrentState != GyroState.Idle && CurrentState != GyroState.Completed && CurrentState != GyroState.Eliminated)
             {
                 if (debugMode) Debug.LogWarning("[GyroDetector] Already detecting, ignored");
                 return;
@@ -251,6 +255,7 @@ namespace Game3
             if (_countdownTimer <= 0f)
             {
                 _countdownEndTime = Time.time;
+                _windowExpiredNotified = false;
                 SetState(GyroState.ReadyForPickup);
                 onCountdownComplete.Invoke();
             }
@@ -276,10 +281,11 @@ namespace Game3
                 return;
             }
 
-            // Check if window expired (no pickup at all)
-            if (elapsed > pickupWindowDuration)
+            // Window expired with no pickup: report it once, then keep listening so a pickup
+            // after the window is reported as "too late" (it was unreachable before).
+            if (elapsed > pickupWindowDuration && !_windowExpiredNotified)
             {
-                SetState(GyroState.Completed);
+                _windowExpiredNotified = true;
                 onPickupWindowExpired.Invoke();
             }
         }
@@ -341,6 +347,7 @@ namespace Game3
 
         private void ResetState()
         {
+            _windowExpiredNotified = false;
             _stillnessTimer = 0f;
             _countdownTimer = countdownDuration;
             SetState(GyroState.Idle);
@@ -399,7 +406,7 @@ namespace Game3
                 Input.gyro.enabled = false;
                 return;
             }
-
+            _gyroEnabledByThis = !Input.gyro.enabled;
             Input.gyro.enabled = true;
             _lastGyroRotation = Input.gyro.rotationRate;
             _lastAcceleration = Input.acceleration;

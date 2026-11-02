@@ -29,6 +29,15 @@ namespace Game3
         [Tooltip("Message when stillness is lost")]
         public string stillnessLostMessage = "Hold still...";
 
+        [Tooltip("Message when the phone is picked up inside the window")]
+        public string pickupSuccessMessage = "In time!";
+        [Tooltip("Message when the phone is picked up before the countdown ends")]
+        public string earlyPickupMessage = "Too early!";
+        [Tooltip("Message when the phone is picked up after the window")]
+        public string tooLateMessage = "Too late!";
+        [Tooltip("Message when the window ends with no pickup")]
+        public string windowExpiredMessage = "Time is up!";
+
         private void Start()
         {
             if (gyroDetector == null)
@@ -54,6 +63,10 @@ namespace Game3
             gyroDetector.onCountdownStarted.AddListener(OnCountdownStarted);
             gyroDetector.onCountdownTick.AddListener(OnCountdownTick);
             gyroDetector.onCountdownComplete.AddListener(OnCountdownComplete);
+            gyroDetector.onPickupSuccess.AddListener(OnPickupSuccess);
+            gyroDetector.onEarlyPickup.AddListener(OnEarlyPickup);
+            gyroDetector.onTooLate.AddListener(OnTooLate);
+            gyroDetector.onPickupWindowExpired.AddListener(OnPickupWindowExpired);
         }
 
         private void UnsubscribeEvents()
@@ -64,6 +77,10 @@ namespace Game3
             gyroDetector.onCountdownStarted.RemoveListener(OnCountdownStarted);
             gyroDetector.onCountdownTick.RemoveListener(OnCountdownTick);
             gyroDetector.onCountdownComplete.RemoveListener(OnCountdownComplete);
+            gyroDetector.onPickupSuccess.RemoveListener(OnPickupSuccess);
+            gyroDetector.onEarlyPickup.RemoveListener(OnEarlyPickup);
+            gyroDetector.onTooLate.RemoveListener(OnTooLate);
+            gyroDetector.onPickupWindowExpired.RemoveListener(OnPickupWindowExpired);
         }
 
         private void OnDetectionStarted()
@@ -112,6 +129,15 @@ namespace Game3
             if (countdownText != null)
                 countdownText.text = "0";
         }
+
+        private void OnPickupSuccess() => UpdateStatusText(pickupSuccessMessage);
+
+        private void OnEarlyPickup() => UpdateStatusText(earlyPickupMessage);
+
+        private void OnTooLate() => UpdateStatusText(tooLateMessage);
+
+        private void OnPickupWindowExpired() => UpdateStatusText(windowExpiredMessage);
+
 
         private void ResetStillnessUI()
         {
