@@ -110,6 +110,7 @@ namespace Game3
             if (editorTestMode && Application.isEditor)
             {
                 HandleEditorTestInput();
+                TickEditorTimers();
                 return;
             }
 
@@ -252,13 +253,15 @@ namespace Game3
                 return;
             }
 
-            if (_countdownTimer <= 0f)
-            {
-                _countdownEndTime = Time.time;
-                _windowExpiredNotified = false;
-                SetState(GyroState.ReadyForPickup);
-                onCountdownComplete.Invoke();
-            }
+            if (_countdownTimer <= 0f) CompleteCountdown();
+        }
+
+        private void CompleteCountdown()
+        {
+            _countdownEndTime = Time.time;
+            _windowExpiredNotified = false;
+            SetState(GyroState.ReadyForPickup);
+            onCountdownComplete.Invoke();
         }
 
         private void CheckPickup(Vector3 gyro, Vector3 accel)
@@ -356,6 +359,27 @@ namespace Game3
         #endregion
 
         #region Editor Testing
+
+        // Editor test mode skips the real sensor checks, but the countdown and the pickup window
+        // still run on time so the full flow (Preparation -> Countdown -> GO -> window) can be tested.
+        private void TickEditorTimers()
+        {
+            if (CurrentState == GyroState.CountingDown)
+            {
+                _countdownTimer -= Time.deltaTime;
+                onCountdownTick.Invoke(_countdownTimer);
+                if (_countdownTimer <= 0f) CompleteCountdown();
+            }
+            else if (CurrentState == GyroState.ReadyForPickup)
+            {
+                float elapsed = Time.time - _countdownEndTime;
+                if (elapsed > pickupWindowDuration && !_windowExpiredNotified)
+                {
+                    _windowExpiredNotified = true;
+                    onPickupWindowExpired.Invoke();
+                }
+            }
+        }
 
         private void HandleEditorTestInput()
         {
